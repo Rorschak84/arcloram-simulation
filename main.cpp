@@ -62,6 +62,7 @@ int main() {
 
 
 //---------------------------------End---------------------------------
+    manager.stopTransmissionLoop();
     manager.stopSimulation();
     logger.logMessage("Simulation stopped.");
     logger.stop();

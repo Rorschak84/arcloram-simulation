@@ -66,3 +66,51 @@ std::vector<std::vector<std::shared_ptr<Node>>> SimulationManager::getReachableN
     }
     return allReachableNodes;
 }
+
+
+
+void SimulationManager::startTransmissionLoop() {
+    dispatchRunning = true;
+    dispatchThread = std::thread(&SimulationManager::transmissionLoop, this);
+}
+
+void SimulationManager::stopTransmissionLoop() {
+    dispatchRunning = false;
+    dispatchCv.notify_all(); // Wake up the thread if it's waiting
+    if (dispatchThread.joinable()) {
+        dispatchThread.join();
+    }
+}
+
+void SimulationManager::transmissionLoop() {
+    while (dispatchRunning) {
+        std::unique_lock<std::mutex> lock(dispatchCvMutex);
+        // Wait for a notification or stop condition
+        dispatchCv.wait(lock, [this] {//wait to be notified by addMessageToTransmit
+
+            // Check if there is at least one node with a message to transmit
+            for (const auto& node : nodes) {
+                if (node->getNextTransmittingMessage().has_value()) {
+                    return true;//there is at least one, we exit the loop and process the messages
+                }
+            }
+            return !dispatchRunning;
+        });
+
+        // Process messages if we received a notification
+        for (const auto& node : nodes) {
+            std::optional<std::string> message = node->getNextTransmittingMessage();
+            if (message) {
+                // Get reachable nodes for this node
+                std::vector<std::shared_ptr<Node>> reachableNodes = getReachableNodesForNode(node);//TODO: use the precalculated values instead
+
+                // Deliver the message to all reachable nodes
+                for (const auto& reachableNode : reachableNodes) {
+                    reachableNode->receiveMessage(*message);
+                    std::cout << "Message transmitted from Node " << node->getId()
+                              << " to Node " << reachableNode->getId() << ": " << *message << std::endl;
+                }
+            }
+        }
+    }
+}

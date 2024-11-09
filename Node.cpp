@@ -48,9 +48,14 @@ std::optional<std::string> Node::getNextReceivedMessage() { //optionnal is a way
     return message;
 }
 
-void Node::addMessageToTransmit(const std::string& message) {
-    std::lock_guard<std::mutex> lock(transmitMutex);
-    transmitBuffer.push(message);
+void Node::addMessageToTransmit(const std::string& message, std::condition_variable& cv, std::mutex& mtx) {
+    {
+        std::lock_guard<std::mutex> lock(transmitMutex);
+        transmitBuffer.push(message);
+    }
+    // Notify that a new message is ready
+    std::lock_guard<std::mutex> lock(mtx); // Lock the shared mutex for condition variable signaling
+    cv.notify_one();
     logger.logMessage("Node "+std::to_string(nodeId)+" queued "+message);
 }
 

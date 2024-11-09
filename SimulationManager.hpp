@@ -5,6 +5,7 @@
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 #include "Node.hpp" // Assuming Node is declared in Node.h
 
 class SimulationManager {
@@ -14,6 +15,11 @@ public:
     void stopSimulation();
     void registerNode(std::shared_ptr<Node> node);
     int getNbNodes() const { return nbNodes; };
+
+
+    // Starts the inter-node message dispatch loop using event-based triggering
+    void startTransmissionLoop();
+    void stopTransmissionLoop();
 
     // Function to get reachable nodes for a specific node
     std::vector<std::shared_ptr<Node>> getReachableNodesForNode(const std::shared_ptr<Node>& node);
@@ -25,12 +31,19 @@ private:
     int nbNodes;
     std::vector<std::shared_ptr<Node>> nodes;
     std::mutex terminalMutex;
-    std::condition_variable cv;//TODO:for the logger, rename accordingly bc it's confusing
-    int currentSlot = 0;
-    bool running = true;
+     int currentSlot = 0;
+    
 
     double distanceThreshold;
     // Helper function to calculate Euclidean distance between two nodes
     double calculateDistance(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b);
 
+
+
+    std::condition_variable dispatchCv; // Condition variable for event-based triggering
+    std::mutex dispatchCvMutex;         // Mutex associated with the condition variable
+
+    void transmissionLoop(); // Main loop for handling transmissions
+     std::atomic<bool> dispatchRunning;
+     std::thread dispatchThread;
 };

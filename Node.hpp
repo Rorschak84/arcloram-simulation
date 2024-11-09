@@ -21,7 +21,7 @@ public:
     void run();
     void stop();
      
-
+    //used by simulation manager
     void receiveMessage(const std::string& message);//add a message to the receiving buffer
 
    //for debugging
@@ -55,7 +55,7 @@ private:
     std::mutex transmitMutex;
 
 //methods
-    
-    void addMessageToTransmit(const std::string& message);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
+    //the node adds a message to the transmitting buffer and notifies the simulation manager
+    void addMessageToTransmit(const std::string& message, std::condition_variable& cv, std::mutex& mtx);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
 };
 
