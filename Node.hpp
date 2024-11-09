@@ -8,21 +8,18 @@
 #include <mutex>
 #include <condition_variable>
 #include <memory>
-
-
-class SimulationManager;
+#include "Logger.hpp"
 
 
 class Node {
 public:
-    Node(int id);
+    Node(int id, Logger& logger);
     void run();
     void stop();
 
 private:
     int nodeId;
     bool running;
-    SimulationManager* manager;
-   
+    Logger& logger;
 };
 

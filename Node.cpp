@@ -1,9 +1,8 @@
 #include "Node.hpp"
-#include "SimulationManager.hpp"
 #include <sstream>
 
-Node::Node(int id)
-    : nodeId(id), running(true) {
+Node::Node(int id, Logger& logger)
+    : nodeId(id), running(true),logger(logger) {
     // Constructor implementation
 }
 
@@ -13,12 +12,11 @@ void Node::run() {
     ss << this_id;
     std::string threadIdStr = ss.str();
 
-    manager->printMessage("Thread: "+threadIdStr+ " for Node "+std::to_string(nodeId)+" is running.");
+    logger.logMessage("Thread: "+threadIdStr+ " for Node "+std::to_string(nodeId)+" is running.");
   
     while (running) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Simulate work
-            manager->printMessage("Node "+std::to_string(nodeId)+" wakes up.");
-        
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Simulate work
+            logger.logMessage("Node "+std::to_string(nodeId)+" wakes up.");   
         }
 }
 

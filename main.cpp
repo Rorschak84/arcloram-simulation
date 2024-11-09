@@ -9,11 +9,11 @@ int main() {
     logger.start();
 
 
-    int nbNodes = 1;
+    int nbNodes = 4;
     SimulationManager manager(nbNodes);
     
     for(int i = 0; i < manager.getNbNodes(); i++){
-         auto node = std::make_shared<Node>(i); // Create a smart pointer
+         auto node = std::make_shared<Node>(i, logger); // Create a smart pointer
         manager.registerNode(node);
     }
     manager.startSimulation();
