@@ -1,26 +1,30 @@
-#include "SimulationManager.hpp"
+#include "Node.hpp"
 #include <thread>
-
+#include "SimulationManager.hpp"
+#include "Logger.hpp"
 
 int main() {
-    SimulationManager simManager;
+
+    Logger logger;
+    logger.start();
+
+
+    int nbNodes = 1;
+    SimulationManager manager(nbNodes);
     
-    // Create nodes and register them with the manager
-    Node node1(1, &simManager);
-    Node node2(2, &simManager);
-    simManager.registerNode(&node1);
-    simManager.registerNode(&node2);
-    
-    // Launch nodes as threads
-    std::thread t1(&Node::run, &node1);
-    std::thread t2(&Node::run, &node2);
-    
-    // Start the simulation manager
-    simManager.startSimulation();
-    
-    // Wait for node threads to complete
-    t1.join();
-    t2.join();
-    
+    for(int i = 0; i < manager.getNbNodes(); i++){
+         auto node = std::make_shared<Node>(i); // Create a smart pointer
+        manager.registerNode(node);
+    }
+    manager.startSimulation();
+
+    //need to change this
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+
+    manager.stopSimulation();
+
+
+    logger.stop();
     return 0;
 }

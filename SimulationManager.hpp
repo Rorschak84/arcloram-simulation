@@ -1,25 +1,30 @@
-#ifndef SIMULATION_MANAGER_H
-#define SIMULATION_MANAGER_H
+#pragma once
+
+
 
 #include <vector>
 #include <mutex>
 #include <condition_variable>
-#include "Node.h" // Assuming Node is declared in Node.h
+#include "Node.hpp" // Assuming Node is declared in Node.h
 
 class SimulationManager {
 public:
-    SimulationManager();
+    SimulationManager(int nbNodes);
     void startSimulation();
-    void registerNode(Node* node);
-    void transmitSignal(Node* sender, Message msg);
-    void tdmaSlotControl();
+    void stopSimulation();
+    void registerNode(std::shared_ptr<Node> node);
+    int getNbNodes() const { return nbNodes; };
+
+    void printMessage(const std::string& message);
+
 
 private:
-    std::vector<Node*> nodes;
-    std::mutex managerMutex;
+    int nbNodes;
+
+
+    std::vector<std::shared_ptr<Node>> nodes;
+    std::mutex terminalMutex;
     std::condition_variable cv;
     int currentSlot = 0;
     bool running = true;
 };
-
-#endif // SIMULATION_MANAGER_H
