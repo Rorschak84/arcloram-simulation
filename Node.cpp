@@ -12,14 +12,14 @@ void Node::run() {
     ss << this_id;
     std::string threadIdStr = ss.str();
 
-    logger.logMessage("Thread: "+threadIdStr+ " for Node "+std::to_string(nodeId)+" is running.");
+    logger.logMessage("Thread: "+threadIdStr+ " for Node "+std::to_string(nodeId)+" located at ("+std::to_string(coordinates.first) +","+std::to_string(coordinates.second)+ ")is running.");
   
     while (running) {
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Simulate work
             logger.logMessage("Node "+std::to_string(nodeId)+" wakes up.");   
 
-            
+
         }
 }
 
