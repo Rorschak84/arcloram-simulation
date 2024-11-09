@@ -11,7 +11,7 @@
 #include "Logger.hpp"
 #include <utility> // For std::pair
 #include <optional>
-
+#include <cmath> // For std::sqrt
 
 
 class Node {
@@ -29,6 +29,15 @@ public:
     std::optional<std::string> getNextReceivedMessage();// .... from the receiving buffer
 
 
+    //getters
+    int getId() const { return nodeId; }
+    int getXCoordinate() const {
+        return coordinates.first;
+    }
+
+    int getYCoordinate() const {
+        return coordinates.second;
+    }
 private:
 
 //variables

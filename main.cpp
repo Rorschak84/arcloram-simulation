@@ -15,7 +15,8 @@ int main() {
 
     //------Node Seed---------
     int nbNodes = 4;
-    SimulationManager manager(nbNodes);
+    double treshold = 1000;
+    SimulationManager manager(nbNodes,treshold);
     //for now, we have a line topology, later we need to create a seed class (or a file) to define the topology
     std::vector<std::pair<int, int>> nodeCoordinates;
     for (int i = 0; i < nbNodes; ++i) {
@@ -30,7 +31,8 @@ int main() {
         manager.registerNode(node);
     }
 
-
+    //PHY Layer: based on the max distance 
+    std::vector<std::vector<std::shared_ptr<Node>>> reachablesNodesPerNode = manager.getReachableNodesForAllNodes();
 //---------------------------------Background---------------------------------
 
     std::atomic<bool> running(true);
