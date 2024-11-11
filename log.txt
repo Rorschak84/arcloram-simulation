@@ -1,0 +1,4 @@
+Node 0 located at (0,0) is running.
+Node 1 located at (800,0) is running.
+Node 0 located at (0,0) is running.
+Node 1 located at (800,0) is running.

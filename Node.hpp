@@ -12,12 +12,16 @@
 #include <utility> // For std::pair
 #include <optional>
 #include <cmath> // For std::sqrt
+#include <random>
+#include <sstream>
+#include "Log.cpp"
+
 
 
 class Node {
 public:
 
-    Node(int id, Logger& logger,std::pair<int, int> coordinates);
+    Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex);
     void run();
     void stop();
      
@@ -50,12 +54,17 @@ private:
     // Buffers for receiving and transmitting messages
     std::queue<std::string> receiveBuffer;
     std::queue<std::string> transmitBuffer;
+ 
     // Mutexes to protect the buffers
     std::mutex receiveMutex;
     std::mutex transmitMutex;
 
+    // Condition variable to notify the simulation manager of new messages
+    std::condition_variable& dispatchCv;
+    std::mutex& dispatchCvMutex;
+
 //methods
     //the node adds a message to the transmitting buffer and notifies the simulation manager
-    void addMessageToTransmit(const std::string& message, std::condition_variable& cv, std::mutex& mtx);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
+    void addMessageToTransmit(const std::string& message);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
 };
 

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <list>
 #include <conio.h> // For _kbhit() and _getch()
+#include "Log.cpp"
 
 int main() {
 
@@ -14,7 +15,7 @@ int main() {
     logger.start();
 
     //------Node Seed---------
-    int nbNodes = 4;
+    int nbNodes = 2;
     double treshold = 1000;
     SimulationManager manager(nbNodes,treshold);
     //for now, we have a line topology, later we need to create a seed class (or a file) to define the topology
@@ -27,21 +28,22 @@ int main() {
     // Create nodes and link to the manager
     for(int i = 0; i < manager.getNbNodes(); i++){
        
-         auto node = std::make_shared<Node>(i, logger, nodeCoordinates[i]); // Create a smart pointer
+         auto node = std::make_shared<Node>(i, logger, nodeCoordinates[i],manager.dispatchCv,manager.dispatchCvMutex); // Create a smart pointer
         manager.registerNode(node);
     }
 
-    //PHY Layer: based on the max distance 
-    std::vector<std::vector<std::shared_ptr<Node>>> reachablesNodesPerNode = manager.getReachableNodesForAllNodes();
+  
 //---------------------------------Background---------------------------------
 
     std::atomic<bool> running(true);
 
-
+    Log startingLog("Starting Simulation...", true);
+    logger.logMessage(startingLog);
     // Background thread that runs the simulation
     std::thread worker([&running,&manager]() {
          //start simulation
         manager.startSimulation();
+        
         while (running) { }
     });
 
@@ -55,7 +57,8 @@ int main() {
             char c = _getch(); // Get the character
             if (c == 'q') {
                 running = false;
-                logger.logMessage("q pressed, stopping simulation...");
+                Log stoppingLog("q pressed, stopping simulation...", true);
+                logger.logMessage(stoppingLog);
             }
         }
     }
@@ -64,7 +67,8 @@ int main() {
 //---------------------------------End---------------------------------
     manager.stopTransmissionLoop();
     manager.stopSimulation();
-    logger.logMessage("Simulation stopped.");
+    Log stoppedLog("Simulation Stopped...", true);
+    logger.logMessage(stoppedLog);
     logger.stop();
     // Wait for worker thread to finish
     worker.join();

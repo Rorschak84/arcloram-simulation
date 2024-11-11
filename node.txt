@@ -15,8 +15,7 @@ void Node::run() {
     std::string threadIdStr = ss.str();
 
     //initial message
-    Log initialNodeLog("Node "+std::to_string(nodeId)+" located at ("+std::to_string(coordinates.first) +","+std::to_string(coordinates.second)+ ") is running.", false);
-    logger.logMessage(initialNodeLog);
+    logger.logMessage("Thread: "+threadIdStr+ " for Node "+std::to_string(nodeId)+" located at ("+std::to_string(coordinates.first) +","+std::to_string(coordinates.second)+ ")is running.");
   
     //randomness:
 
@@ -32,7 +31,7 @@ void Node::run() {
     while (running) {
 
             std::this_thread::sleep_for(std::chrono::milliseconds(randomMilliseconds)); // Simulate work
-            //addMessageToTransmit("--MSG from Node "+std::to_string(nodeId)+"--"); // Add a message to the transmit buffer  
+            addMessageToTransmit("--MSG from Node "+std::to_string(nodeId)+"--"); // Add a message to the transmit buffer  
 
         }
 }
@@ -49,8 +48,8 @@ void Node::receiveMessage(const std::string& message) {
     std::lock_guard<std::mutex> lock(receiveMutex);
     receiveBuffer.push(message);
     }
-    Log receivedLog("Node "+std::to_string(nodeId)+" received "+message, false);
-    logger.logMessage(receivedLog);
+
+    logger.logMessage("Node "+std::to_string(nodeId)+" received "+message);
 }
 
 std::optional<std::string> Node::getNextReceivedMessage() { //optionnal is a way to return a value or nothing
@@ -80,8 +79,7 @@ void Node::addMessageToTransmit(const std::string& message) {
     dispatchCv.notify_one();//notify the simulation manager that a message is ready
     }      
 
-  Log queuedLog("Node "+std::to_string(nodeId)+" queued "+message, false);
-  logger.logMessage(queuedLog);
+  logger.logMessage("Node "+std::to_string(nodeId)+" queued "+message);
 
 }
 

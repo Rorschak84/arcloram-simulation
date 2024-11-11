@@ -7,6 +7,8 @@
 #include <condition_variable>
 #include <atomic>
 #include "Node.hpp" // Assuming Node is declared in Node.h
+#include "Log.cpp"
+
 
 class SimulationManager {
 public:
@@ -26,13 +28,14 @@ public:
 
     // Function to get reachable nodes for all nodes
     std::vector<std::vector<std::shared_ptr<Node>>> getReachableNodesForAllNodes();
+    std::condition_variable dispatchCv; // Condition variable for event-based triggering
+    std::mutex dispatchCvMutex;         // Mutex associated with the condition variable
 
 private:
     int nbNodes;
     std::vector<std::shared_ptr<Node>> nodes;
-    std::mutex terminalMutex;
-     int currentSlot = 0;
-    
+    std::vector<std::vector<std::shared_ptr<Node>>> reachableNodesPerNode;//stores the reachable nodes for each node
+  
 
     double distanceThreshold;
     // Helper function to calculate Euclidean distance between two nodes
@@ -40,8 +43,6 @@ private:
 
 
 
-    std::condition_variable dispatchCv; // Condition variable for event-based triggering
-    std::mutex dispatchCvMutex;         // Mutex associated with the condition variable
 
     void transmissionLoop(); // Main loop for handling transmissions
      std::atomic<bool> dispatchRunning;

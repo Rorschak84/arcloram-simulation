@@ -33,6 +33,7 @@ void SimulationManager::registerNode(std::shared_ptr<Node> node) {
     if (node == nullptr) {
     throw std::invalid_argument("Cannot register a nullptr node");
     }
+    std::lock_guard<std::mutex> lock(terminalMutex);//his line locks the managerMutex for the duration of the scope, ensuring that no other thread can modify nodes simultaneously
     nodes.push_back(node);
 
     
