@@ -12,13 +12,13 @@
 
 class SimulationManager {
 public:
-    SimulationManager(int nbNodes,double distanceThreshold);
+    SimulationManager(int nbNodes,double distanceThreshold,Logger& logger);
     void startSimulation();
     void stopSimulation();
     void registerNode(std::shared_ptr<Node> node);
     int getNbNodes() const { return nbNodes; };
 
-
+    void testFunction();
     // Starts the inter-node message dispatch loop using event-based triggering
     void startTransmissionLoop();
     void stopTransmissionLoop();
@@ -36,15 +36,15 @@ private:
     std::vector<std::shared_ptr<Node>> nodes;
     std::vector<std::vector<std::shared_ptr<Node>>> reachableNodesPerNode;//stores the reachable nodes for each node
   
-
+    bool checkForMessages();
     double distanceThreshold;
     // Helper function to calculate Euclidean distance between two nodes
     double calculateDistance(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b);
 
+  Logger& logger;
 
-
-
+void ProcessMessages();
     void transmissionLoop(); // Main loop for handling transmissions
-     std::atomic<bool> dispatchRunning;
+     bool dispatchRunning;
      std::thread dispatchThread;
 };

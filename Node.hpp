@@ -32,6 +32,7 @@ public:
     std::optional<std::string> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
     std::optional<std::string> getNextReceivedMessage();// .... from the receiving buffer
 
+ bool hasNextTransmittingMessage() ;//this is called by the transmission loop
 
     //getters
     int getId() const { return nodeId; }
@@ -62,7 +63,7 @@ private:
     // Condition variable to notify the simulation manager of new messages
     std::condition_variable& dispatchCv;
     std::mutex& dispatchCvMutex;
-
+   
 //methods
     //the node adds a message to the transmitting buffer and notifies the simulation manager
     void addMessageToTransmit(const std::string& message);//add a message to the transmitting buffer, this method is private because it is only called by the node itself

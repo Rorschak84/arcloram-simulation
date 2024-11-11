@@ -15,9 +15,9 @@ int main() {
     logger.start();
 
     //------Node Seed---------
-    int nbNodes = 2;
+    int nbNodes = 4;
     double treshold = 1000;
-    SimulationManager manager(nbNodes,treshold);
+    SimulationManager manager(nbNodes,treshold,logger);
     //for now, we have a line topology, later we need to create a seed class (or a file) to define the topology
     std::vector<std::pair<int, int>> nodeCoordinates;
     for (int i = 0; i < nbNodes; ++i) {
