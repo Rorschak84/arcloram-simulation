@@ -18,3 +18,68 @@ Node 0 located at (0,0) is running.
 Node 2 located at (1600,0) is running.
 Node 1 located at (800,0) is running.
 Node 3 located at (2400,0) is running.
+Node 0 located at (0,0) is running.
+Node 1 located at (800,0) is running.
+Node 2 located at (1600,0) is running.
+Node 3 located at (2400,0) is running.
+Node 0 located at (0,0) is running.
+Node 2 located at (1600,0) is running.
+Node 1 located at (800,0) is running.
+Node 3 located at (2400,0) is running.
+Node 1 located at (800,0)2started to run
+Node 3 located at (2400,0)2started to run
+Node 2 located at (1600,0)2started to run
+Node 1 located at (800,0)Class: 2 started to run
+Node 2 located at (1600,0)Class: 2 started to run
+Node 0 located at (0,0)Class: 3 started to run
+Node 3 located at (2400,0)Class: 2 started to run
+Node 0 located at (0,0)Class: 3 started to run
+Node 1 located at (800,0)Class: 2 started to run
+Node 2 located at (1600,0)Class: 2 started to run
+Node 3 located at (2400,0)Class: 2 started to run
+Node 4 located at (3200,0)Class: 2 started to run
+Node 5 located at (4000,0)Class: 2 started to run
+Node 6 located at (4800,0)Class: 2 started to run
+Node 7 located at (5600,0)Class: 2 started to run
+Node 8 located at (6400,0)Class: 2 started to run
+Node 9 located at (7200,0)Class: 2 started to run
+Node 10 located at (8000,0)Class: 2 started to run
+Node 12 located at (9600,0)Class: 2 started to run
+Node 11 located at (8800,0)Class: 2 started to run
+Node 14 located at (11200,0)Class: 2 started to run
+Node 13 located at (10400,0)Class: 2 started to run
+Node 15 located at (12000,0)Class: 2 started to run
+Node 18 located at (14400,0)Class: 2 started to run
+Node 16 located at (12800,0)Class: 2 started to run
+Node 17 located at (13600,0)Class: 2 started to run
+Node 19 located at (15200,0)Class: 2 started to run
+Node 21 located at (16800,0)Class: 2 started to run
+Node 20 located at (16000,0)Class: 2 started to run
+Node 22 located at (17600,0)Class: 2 started to run
+Node 23 located at (18400,0)Class: 2 started to run
+Node 24 located at (19200,0)Class: 2 started to run
+Node 25 located at (20000,0)Class: 2 started to run
+Node 27 located at (21600,0)Class: 2 started to run
+Node 26 located at (20800,0)Class: 2 started to run
+Node 28 located at (22400,0)Class: 2 started to run
+Node 29 located at (23200,0)Class: 2 started to run
+Node 30 located at (24000,0)Class: 2 started to run
+Node 31 located at (24800,0)Class: 2 started to run
+Node 32 located at (25600,0)Class: 2 started to run
+Node 33 located at (26400,0)Class: 2 started to run
+Node 34 located at (27200,0)Class: 2 started to run
+Node 35 located at (28000,0)Class: 2 started to run
+Node 36 located at (28800,0)Class: 2 started to run
+Node 37 located at (29600,0)Class: 2 started to run
+Node 38 located at (30400,0)Class: 2 started to run
+Node 44 located at (35200,0)Class: 2 started to run
+Node 40 located at (32000,0)Class: 2 started to run
+Node 39 located at (31200,0)Class: 2 started to run
+Node 41 located at (32800,0)Class: 2 started to run
+Node 42 located at (33600,0)Class: 2 started to run
+Node 43 located at (34400,0)Class: 2 started to run
+Node 45 located at (36000,0)Class: 2 started to run
+Node 46 located at (36800,0)Class: 2 started to run
+Node 47 located at (37600,0)Class: 2 started to run
+Node 48 located at (38400,0)Class: 2 started to run
+Node 49 located at (39200,0)Class: 2 started to run

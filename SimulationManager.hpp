@@ -33,7 +33,7 @@ public:
 
 private:
     int nbNodes;
-    std::vector<std::shared_ptr<Node>> nodes;
+    std::vector<std::shared_ptr<Node>> nodes;//heterogeneous container of nodes (C1, C2...)
     std::vector<std::vector<std::shared_ptr<Node>>> reachableNodesPerNode;//stores the reachable nodes for each node
   
     bool checkForMessages();

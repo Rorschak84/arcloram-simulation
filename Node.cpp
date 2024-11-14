@@ -7,40 +7,24 @@ Node::Node(int id, Logger& logger, std::pair<int,int> coordinates, std::conditio
     // Constructor implementation
 }
 
-void Node::run() {
 
+
+
+std::string Node::initMessage() const{
     //retrieve the thread id
     std::thread::id this_id = std::this_thread::get_id();
     std::stringstream ss;
     ss << this_id;
     std::string threadIdStr = ss.str();
 
-    //initial message
-    Log initialNodeLog("Node "+std::to_string(nodeId)+" located at ("+std::to_string(coordinates.first) +","+std::to_string(coordinates.second)+ ") is running.", false);
-    logger.logMessage(initialNodeLog);
-  
-    //randomness:
-
-    // Create a random device and a seed for the random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    // Define a distribution range for the random time duration (e.g., 100 to 1000 milliseconds)
-    std::uniform_int_distribution<> dist(2000, 4000); // Range in milliseconds
-
-    // Generate a random duration
-    int randomMilliseconds = dist(gen);
-
-    while (running) {
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(randomMilliseconds)); // Simulate work
-            addMessageToTransmit("--MSG from Node "+std::to_string(nodeId)+"--"); // Add a message to the transmit buffer  
-
-        }
+    return "Node "+std::to_string(nodeId)+" located at ("+std::to_string(coordinates.first) +","+std::to_string(coordinates.second)+ ")";
 }
+
+
 
 void Node::stop() {
 
-    //check if it works
+    //check if it works, like making sure threads are stopped etc.. TODO
     running = false;
 }
 

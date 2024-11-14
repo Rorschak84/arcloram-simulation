@@ -22,9 +22,15 @@ class Node {
 public:
 
     Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex);
-    void run();
+    virtual ~Node() = default;
+    
+    virtual void run()=0; //we need to implement behaviour in child classes
+    
+    
     void stop();
      
+    virtual std::string initMessage() const;
+
     //used by simulation manager
     void receiveMessage(const std::string& message);//add a message to the receiving buffer
 
@@ -32,7 +38,7 @@ public:
     std::optional<std::string> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
     std::optional<std::string> getNextReceivedMessage();// .... from the receiving buffer
 
- bool hasNextTransmittingMessage() ;//this is called by the transmission loop
+    bool hasNextTransmittingMessage() ;//this is called by the transmission loop
 
     //getters
     int getId() const { return nodeId; }
@@ -43,7 +49,8 @@ public:
     int getYCoordinate() const {
         return coordinates.second;
     }
-private:
+
+protected:
 
 //variables
 

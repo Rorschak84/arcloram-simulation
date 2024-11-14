@@ -6,6 +6,9 @@
 #include <list>
 #include <conio.h> // For _kbhit() and _getch()
 #include "Log.cpp"
+#include "C3_Node.hpp"
+#include "C2_Node.hpp"
+#include "C1_Node.hpp"
 
 int main() {
 
@@ -15,7 +18,10 @@ int main() {
     logger.start();
 
     //------Node Seed---------
-    int nbNodes = 4;
+
+    //BE extra careful about the order of the nodes in the vector, it will be used to determine the id of the nodes
+
+    int nbNodes = 50;
     double treshold = 1000;
     SimulationManager manager(nbNodes,treshold,logger);
     //for now, we have a line topology, later we need to create a seed class (or a file) to define the topology
@@ -24,11 +30,15 @@ int main() {
          nodeCoordinates.emplace_back(i * 800, 0); // Add a pair (i * 800, 0)
     }
     
+    //create a C3 node
+    auto firstNode = std::make_shared<C3_Node>(0, logger, nodeCoordinates[0],manager.dispatchCv,manager.dispatchCvMutex); 
+    manager.registerNode(firstNode);
+
 
     // Create nodes and link to the manager
-    for(int i = 0; i < manager.getNbNodes(); i++){
+    for(int i = 1; i < manager.getNbNodes(); i++){
        
-         auto node = std::make_shared<Node>(i, logger, nodeCoordinates[i],manager.dispatchCv,manager.dispatchCvMutex); // Create a smart pointer
+         auto node = std::make_shared<C2_Node>(i, logger, nodeCoordinates[i],manager.dispatchCv,manager.dispatchCvMutex); // Create a smart pointer
         manager.registerNode(node);
     }
 
