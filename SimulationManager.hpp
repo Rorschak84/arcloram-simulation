@@ -7,7 +7,6 @@
 #include <condition_variable>
 #include <atomic>
 #include "Node.hpp" // Assuming Node is declared in Node.h
-#include "Log.cpp"
 
 
 class SimulationManager {
@@ -30,10 +29,10 @@ public:
     std::vector<std::vector<std::shared_ptr<Node>>> getReachableNodesForAllNodes();
     std::condition_variable dispatchCv; // Condition variable for event-based triggering
     std::mutex dispatchCvMutex;         // Mutex associated with the condition variable
-
+    std::vector<std::shared_ptr<Node>> nodes;//heterogeneous container of nodes (C1, C2...)
 private:
     int nbNodes;
-    std::vector<std::shared_ptr<Node>> nodes;//heterogeneous container of nodes (C1, C2...)
+    
     std::vector<std::vector<std::shared_ptr<Node>>> reachableNodesPerNode;//stores the reachable nodes for each node
   
     bool checkForMessages();

@@ -32,7 +32,7 @@ private:
  void tick();
 
 public:
-    Clock(int baseUnitMilliseconds = 10,Logger& logger) 
+    Clock( Logger& logger,int baseUnitMilliseconds = 10) 
         : running(false), tickInterval(baseUnitMilliseconds), lastProcessedTime(0),logger(logger) {}
 
     void start() ;

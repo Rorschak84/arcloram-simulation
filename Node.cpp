@@ -56,7 +56,7 @@ void Node::initializeTransitionMap(){
 }
 
 
-NodeState convertWindowNodeStateToNodeState(WindowNodeState state) {
+NodeState Node::convertWindowNodeStateToNodeState(WindowNodeState state) {
         switch (state) {
             case WindowNodeState::CanIdle:
                 return NodeState::Idling;
@@ -108,7 +108,7 @@ void Node::onTimeChange(WindowNodeState proposedState) {
         }
 }
 
-static std::string stateToString(NodeState state) {
+ std::string Node::stateToString(NodeState state) {
         switch (state) {
             case NodeState::Idling: return "Node Idling";
             case NodeState::Transmitting: return "Node Transmiting";

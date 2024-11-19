@@ -5,7 +5,6 @@
 #include <atomic>
 #include <list>
 #include <conio.h> // For _kbhit() and _getch()
-#include "Log.cpp"
 #include "C3_Node.hpp"
 #include "C2_Node.hpp"
 #include "C1_Node.hpp"
@@ -19,10 +18,11 @@ int main() {
     logger.start();
 
     //Clock
-     // Create a clock with a base unit time of 10 milliseconds
-     //We can change this base unit time to make the simulation faster or slower
-     //It's all about keeping the proportions in the seeder to reflect the real time
-    Clock clock(10);
+     // Create a clock with a tick time of 10 milliseconds (it's actually a scheduler )
+     //TODO: change the name of CLock by Scheduler
+    Clock clock(logger,10);
+    //convert base time to milliseconds
+    int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() ;
 
     //------Node Seed---------
 
@@ -40,15 +40,31 @@ int main() {
     }
     
     //create a C3 node
-    auto firstNode = std::make_shared<C3_Node>(0, logger, nodeCoordinates[0],manager.dispatchCv,manager.dispatchCvMutex); 
+    //there should be a little offset in the beginning to allow the system to stabilize
+    auto firstNode = std::make_shared<C3_Node>(0, logger, nodeCoordinates[0],manager.dispatchCv,manager.dispatchCvMutex);
+    firstNode->addActivation(baseTime+200, WindowNodeState::CanTransmit); 
+    firstNode->addActivation(baseTime+300, WindowNodeState::CanIdle);
     manager.registerNode(firstNode);
 
+    Log timelog("TimeLOG:"+std::to_string(baseTime+1100)+"    "+std::to_string(baseTime+2100), true);
+    logger.logMessage(timelog);
 
-    // Create nodes and link to the manager
-    for(int i = 1; i < manager.getNbNodes(); i++){
+    // // Create nodes and link to the manager
+    // for(int i = 1; i < manager.getNbNodes(); i++){
        
-         auto node = std::make_shared<C2_Node>(i, logger, nodeCoordinates[i],manager.dispatchCv,manager.dispatchCvMutex); // Create a smart pointer
-        manager.registerNode(node);
+    //      auto node = std::make_shared<C2_Node>(i, logger, nodeCoordinates[i],manager.dispatchCv,manager.dispatchCvMutex); // Create a smart pointer
+    //     manager.registerNode(node);
+    // }
+
+    //TODO: have a getter for the nodes list, or create a function, you should not allot the nodes to be accessible in public
+    for(auto ptrNode : manager.nodes){
+                // Schedule callbacks for the node's activations
+        //we use the same callback that will call the correct callback Associated with the state transition
+        for (const auto& [activationTime, windowNodeState] : ptrNode->getActivationSchedule()) {
+            clock.scheduleCallback(activationTime, [ptrNode,windowNodeState]() {
+                ptrNode->onTimeChange(windowNodeState);//onTimeChange will call the callback associated with the proposed state and the currentState stored in the stateTransitions variable
+            });
+        }
     }
 
   
@@ -58,12 +74,17 @@ int main() {
 
     Log startingLog("Starting Simulation...", true);
     logger.logMessage(startingLog);
-    // Background thread that runs the simulation
-    std::thread worker([&running,&manager]() {
-         //start simulation
+
+
+    
+    std::thread worker([&running, &manager,&clock]() {
+        // Start simulation
         manager.startSimulation();
-        
-        while (running) { }
+        // Background thread that runs the simulation
+         clock.start();
+        while (running) {
+            //TODO: verify it's not destroying the performance
+        }
     });
 
 
@@ -82,15 +103,21 @@ int main() {
         }
     }
 
-
 //---------------------------------End---------------------------------
+    clock.stop();
+    Log clockstopLog("Scheduler stopped...", true);
+    logger.logMessage(clockstopLog);
     manager.stopTransmissionLoop();
+     Log stoppingLog("transmission loop stopped...", true);
+    logger.logMessage(stoppingLog);
     manager.stopSimulation();
-    Log stoppedLog("Simulation Stopped...", true);
-    logger.logMessage(stoppedLog);
-    logger.stop();
+    Log stoppingLog2("Simulation Manager stopped...", true);
+    logger.logMessage(stoppingLog2);
     // Wait for worker thread to finish
     worker.join();
+    Log stoppedLog("Simulation Stopped... Thank you for using ArcLoRaM Simulator", true);
+    logger.logMessage(stoppedLog);
+    logger.stop();
 
     return 0;
 }

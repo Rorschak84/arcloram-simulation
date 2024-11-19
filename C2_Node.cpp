@@ -8,16 +8,22 @@ std::string C2_Node::initMessage() const{
     return finalMsg;
 }
 
-    void C2_Node::run()
-{
+    bool C2_Node::canIdleFromTransmitting() { return true; }
+    bool C2_Node::canIdleFromListening() { return true; }
+    bool C2_Node::canIdleFromSleeping() { return true; }
+    bool C2_Node::canIdleFromIdling() { return true; }
 
+    bool C2_Node::canTransmitFromIdling() { return true; }
+    bool C2_Node::canTransmitFromListening() { return true; }
+    bool C2_Node::canTransmitFromSleeping() { return true; }
+    bool C2_Node::canTransmitFromTransmitting() { return true; }
 
-    // Generate a random duration
-    int milliseconds = 1000;
-//do we need this while? We have an event driven mechanism 
+    bool C2_Node::canListenFromIdling() { return true; }
+    bool C2_Node::canListenFromTransmitting() { return true; }
+    bool C2_Node::canListenFromSleeping() { return true; }
+    bool C2_Node::canListenFromListening() { return true; }
 
-    while (running) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds)); // Simulate work
-           
-        }
-}
+    bool C2_Node::canSleepFromIdling() { return true; }
+    bool C2_Node::canSleepFromTransmitting() { return true; }
+    bool C2_Node::canSleepFromListening() { return true; }
+    bool C2_Node::canSleepFromSleeping() { return true; }

@@ -15,8 +15,8 @@ void Clock::start(){
         clockThread= std::thread([this]() {
             auto nextTick = std::chrono::steady_clock::now();
             while (running) {
-                Log runningLog("New tick at:"+std::to_string(nextTick.time_since_epoch().count()), true);
-                logger.logMessage(runningLog);
+                
+                
                 nextTick += tickInterval;
 
                 tick();
@@ -55,8 +55,8 @@ void Clock::tick() {
 
         // Debugging: Check if any callbacks are found
         if (range.first == range.second) {
-            Log noCallbacks("No callbacks found for time: "+std::to_string(time), true);
-            logger.logMessage(noCallbacks);
+            // Log noCallbacks("No callbacks found for time: "+std::to_string(time), true);
+            // logger.logMessage(noCallbacks);
            
         } else {
 

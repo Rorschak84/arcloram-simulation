@@ -20,7 +20,26 @@ public :
 
   
     protected:
+    
+    bool canIdleFromTransmitting();
+    bool canIdleFromListening();
+    bool canIdleFromSleeping();
+    bool canIdleFromIdling();
 
+    bool canTransmitFromIdling();
+    bool canTransmitFromListening();
+    bool canTransmitFromSleeping();
+    bool canTransmitFromTransmitting();
+
+    bool canListenFromIdling();
+    bool canListenFromTransmitting();
+    bool canListenFromSleeping();
+    bool canListenFromListening();
+
+    bool canSleepFromIdling();
+    bool canSleepFromTransmitting();
+    bool canSleepFromListening();
+    bool canSleepFromSleeping();
    
 
 };

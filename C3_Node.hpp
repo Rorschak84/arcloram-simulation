@@ -18,9 +18,24 @@ public :
 
     std::string initMessage() const override;
 
+protected:
+    bool canIdleFromTransmitting();
+    bool canIdleFromListening();
+    bool canIdleFromSleeping();
+    bool canIdleFromIdling();
 
-    protected:
-       
+    bool canTransmitFromIdling();
+    bool canTransmitFromListening();
+    bool canTransmitFromSleeping();
+    bool canTransmitFromTransmitting();
 
-    
+    bool canListenFromIdling();
+    bool canListenFromTransmitting();
+    bool canListenFromSleeping();
+    bool canListenFromListening();
+
+    bool canSleepFromIdling();
+    bool canSleepFromTransmitting();
+    bool canSleepFromListening();
+    bool canSleepFromSleeping();
 };

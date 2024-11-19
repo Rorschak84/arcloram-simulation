@@ -15,7 +15,6 @@
 #include <cmath> // For std::sqrt
 #include <random>
 #include <sstream>
-#include "Log.cpp"
 #include <map>
 
 
@@ -65,6 +64,12 @@ public:
      //add TDMA
      void addActivation(int64_t activationTime, WindowNodeState activationState);
              
+    const std::vector<std::pair<int64_t, WindowNodeState>>& getActivationSchedule() const {
+        return activationSchedule;
+    }
+
+     void onTimeChange(WindowNodeState proposedState);
+
 
 protected:
 
@@ -93,7 +98,7 @@ protected:
 
 
     //---------------------------------------TDMA-------------------------------------
-      std::vector<std::pair<int64_t, WindowNodeState>> activationSchedule; // the proposed node state by the scheduler at a given time
+    std::vector<std::pair<int64_t, WindowNodeState>> activationSchedule; // the proposed node state by the scheduler at a given time
     NodeState currentState; // the actual state of the node
     // Transition rules using functions for complex conditions: link a proposed state/current State with a callback that will check conditions and eventually change current state and perform actions
     std::map<std::pair<WindowNodeState, NodeState>,  std::function<bool()>> stateTransitions;
@@ -103,11 +108,7 @@ protected:
     }
     NodeState convertWindowNodeStateToNodeState(WindowNodeState state);
 
-    void onTimeChange(WindowNodeState proposedState);
-    
-    const std::vector<std::pair<int64_t, WindowNodeState>>& getActivationSchedule() const {
-        return activationSchedule;
-    }
+   
     static std::string stateToString(NodeState state);
 
 

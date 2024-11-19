@@ -86,8 +86,11 @@ void SimulationManager::startTransmissionLoop() {
 void SimulationManager::stopTransmissionLoop() {
     dispatchRunning = false;
     dispatchCv.notify_all(); // Wake up the thread if it's waiting
+    //
     if (dispatchThread.joinable()) {
+
         dispatchThread.join();
+        
     }
 }
 
@@ -105,7 +108,7 @@ void SimulationManager::transmissionLoop() {
         // logger.logMessage(notified);
         //TODO: handle termination of the program
 
-         return (checkForMessages()); });
+         return (checkForMessages()|| !dispatchRunning); });
 
         // Log notified("After Wait, condition met", true);
         // logger.logMessage(notified); 

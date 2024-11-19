@@ -9,17 +9,22 @@ std::string C3_Node::initMessage() const{
     return finalMsg;
 }
 
-    void C3_Node::run()
-{
+    bool C3_Node::canIdleFromTransmitting() { return true; }
+    bool C3_Node::canIdleFromListening() { return true; }
+    bool C3_Node::canIdleFromSleeping() { return true; }
+    bool C3_Node::canIdleFromIdling() { return true; }
 
+    bool C3_Node::canTransmitFromIdling() { return true; }
+    bool C3_Node::canTransmitFromListening() { return true; }
+    bool C3_Node::canTransmitFromSleeping() { return true; }
+    bool C3_Node::canTransmitFromTransmitting() { return true; }
 
+    bool C3_Node::canListenFromIdling() { return true; }
+    bool C3_Node::canListenFromTransmitting() { return true; }
+    bool C3_Node::canListenFromSleeping() { return true; }
+    bool C3_Node::canListenFromListening() { return true; }
 
-    // Generate a random duration
-    int randomMilliseconds = 1000;
-
-    while (running) {
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(randomMilliseconds)); // Simulate work
-          
-        }
-}
+    bool C3_Node::canSleepFromIdling() { return true; }
+    bool C3_Node::canSleepFromTransmitting() { return true; }
+    bool C3_Node::canSleepFromListening() { return true; }
+    bool C3_Node::canSleepFromSleeping() { return true; }

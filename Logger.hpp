@@ -7,8 +7,16 @@
 #include <queue>
 #include <condition_variable>
 #include <fstream>
-#include "Log.cpp"
-//#include "spdlog/spdlog.h"   -> maybe use this library for logging
+
+
+struct Log {
+    std::string message;
+    bool forTerminal;
+
+    // Optional: Constructor for convenience
+    Log(const std::string& msg, bool terminalOutput)
+        : message(msg), forTerminal(terminalOutput) {}
+};
 
 class Logger{
 
