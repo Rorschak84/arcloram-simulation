@@ -9,6 +9,7 @@
 #include "C3_Node.hpp"
 #include "C2_Node.hpp"
 #include "C1_Node.hpp"
+#include "Clock.hpp"
 
 int main() {
 
@@ -17,13 +18,21 @@ int main() {
     Logger logger;
     logger.start();
 
+    //Clock
+     // Create a clock with a base unit time of 10 milliseconds
+     //We can change this base unit time to make the simulation faster or slower
+     //It's all about keeping the proportions in the seeder to reflect the real time
+    Clock clock(10);
+
     //------Node Seed---------
 
     //BE extra careful about the order of the nodes in the vector, it will be used to determine the id of the nodes
 
-    int nbNodes = 50;
-    double treshold = 1000;
-    SimulationManager manager(nbNodes,treshold,logger);
+    int nbNodes = 4;
+    double treshHold = 1000;//for the max distance of communication
+    SimulationManager manager(nbNodes,treshHold,logger);
+
+    
     //for now, we have a line topology, later we need to create a seed class (or a file) to define the topology
     std::vector<std::pair<int, int>> nodeCoordinates;
     for (int i = 0; i < nbNodes; ++i) {

@@ -8,6 +8,8 @@ public :
     C2_Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex)
     : Node(id, logger, coordinates, dispatchCv, dispatchCvMutex) {
 
+            initializeTransitionMap();
+            setInitialState(NodeState::Sleeping);
 
     };
 
@@ -16,8 +18,10 @@ public :
     }
     
     std::string initMessage() const override;
-    void run() override;
-    protected:
 
+    
+ 
+    protected:
+     
     
 };

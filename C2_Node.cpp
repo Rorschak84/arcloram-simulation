@@ -11,25 +11,13 @@ std::string C2_Node::initMessage() const{
     void C2_Node::run()
 {
 
-    //initial message
-    Log initialNodeLog(initMessage(), false);
-    logger.logMessage(initialNodeLog);
-  
-    //randomness:
-
-    // Create a random device and a seed for the random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    // Define a distribution range for the random time duration (e.g., 100 to 1000 milliseconds)
-    std::uniform_int_distribution<> dist(2000, 4000); // Range in milliseconds
 
     // Generate a random duration
-    int randomMilliseconds = dist(gen);
+    int milliseconds = 1000;
+//do we need this while? We have an event driven mechanism 
 
     while (running) {
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(randomMilliseconds)); // Simulate work
-            addMessageToTransmit("--MSG from Node "+std::to_string(nodeId)+"--"); // Add a message to the transmit buffer  
-
+            std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds)); // Simulate work
+           
         }
 }

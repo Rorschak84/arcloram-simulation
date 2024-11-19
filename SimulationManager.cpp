@@ -12,12 +12,22 @@ void SimulationManager::startSimulation() {
     //launch the thread that will handle the transmission
     startTransmissionLoop();
 
-
+    // Calculate reachable nodes for each node (BASIC PHY LAYER)
    reachableNodesPerNode = getReachableNodesForAllNodes();
-   //launch the threads corresponding to the nodes in detached mode
+
     for(std::shared_ptr<Node> node : nodes){
-        std::thread t(&Node::run, node);
-        t.detach();
+        
+        /*We shifted to an event driven model, nodes are no longer threads running independently
+          They wait for an event ( scheduler proposes a state transition) 
+          and eventually send a message on their transmission buffer that will be collected by the transmission loop
+
+          std::thread t(&Node::run, node);
+           t.detach();
+        */
+        
+        Log initialNodeLog(node->initMessage(), false);
+        logger.logMessage(initialNodeLog);
+       
     }
 
 
@@ -127,7 +137,3 @@ void SimulationManager::ProcessMessages(){
         }
 }
 
-
-void SimulationManager::testFunction() {
-  
-}
