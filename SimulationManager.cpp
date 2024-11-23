@@ -25,7 +25,7 @@ void SimulationManager::startSimulation() {
            t.detach();
         */
         
-        Log initialNodeLog(node->initMessage(), false);
+        Log initialNodeLog(node->initMessage(), true);
         logger.logMessage(initialNodeLog);
        
     }
@@ -129,12 +129,12 @@ bool SimulationManager::checkForMessages(){
 
 void SimulationManager::ProcessMessages(){
         for (const auto& node : nodes) {
-            std::optional<std::string> message = node->getNextTransmittingMessage();
+            std::optional<std::pair<std::string, std::chrono::milliseconds>> message = node->getNextTransmittingMessage();
             if (message.has_value()) {
                 Log hasValue("Node "+std::to_string(node->getId())+" msg is processed", true);
                  logger.logMessage(hasValue);
                 for (const auto& reachableNode : reachableNodesPerNode[node->getId()]) {
-                    reachableNode->receiveMessage(message.value());
+                    reachableNode->receiveMessage(message->first, message->second);
                 }
             }
         }

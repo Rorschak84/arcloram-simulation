@@ -16,7 +16,7 @@
 #include <random>
 #include <sstream>
 #include <map>
-
+#include <atomic>
 
 // Enum representing possible states for nodes
 enum class NodeState {
@@ -37,18 +37,19 @@ class Node {
 public:
 
     Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex);
-    virtual ~Node() = default;
-    
+    virtual ~Node() {
+        stopReceiving = true; // Ensure any active threads are signaled to stop
+    }
+
     //virtual void run()=0; //we shifted to an event driven model
-    
     
     void stop();
      
     virtual std::string initMessage() const;//default message to be logged when the node starts
 
     //used by simulation manager
-    void receiveMessage(const std::string& message);//add a message to the receiving buffer
-    std::optional<std::string> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
+    void receiveMessage(const std::string message, std::chrono::milliseconds timeOnAir);//add a message to the receiving buffer
+    std::optional<std::pair<std::string,std::chrono::milliseconds>> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
     std::optional<std::string> getNextReceivedMessage();// .... from the receiving buffer
     bool hasNextTransmittingMessage() ;//this is called by the transmission loop
 
@@ -74,7 +75,6 @@ public:
 protected:
 
     //variables
-
     std::pair<int, int> coordinates ={0,0};//in meters (x,y)
     int nodeId;
     bool running;
@@ -82,8 +82,12 @@ protected:
 
     // Buffers for receiving and transmitting messages
     std::queue<std::string> receiveBuffer;
-    std::queue<std::string> transmitBuffer;
+    std::queue<std::pair<std::string,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
  
+    //to simulate interferences:
+    std::atomic<std::chrono::steady_clock::time_point> timeOnAirEnd{std::chrono::steady_clock::now()}; // End of current Time On Air
+    std::atomic<bool> stopReceiving{false};           // Signals the active thread to stop
+
     // Mutexes to protect the buffers
     std::mutex receiveMutex;
     std::mutex transmitMutex;
@@ -94,11 +98,11 @@ protected:
 
     //methods
     //the node adds a message to the transmitting buffer and notifies the simulation manager
-    void addMessageToTransmit(const std::string& message);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
+    void addMessageToTransmit(const std::string& message,std::chrono::milliseconds timeOnAir);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
 
 
     //---------------------------------------TDMA-------------------------------------
-    std::vector<std::pair<int64_t, WindowNodeState>> activationSchedule; // the proposed node state by the scheduler at a given time
+    std::vector<std::pair<int64_t, WindowNodeState>> activationSchedule; // the list of proposed node state (window State) by the scheduler at a given time
     NodeState currentState; // the actual state of the node
     // Transition rules using functions for complex conditions: link a proposed state/current State with a callback that will check conditions and eventually change current state and perform actions
     std::map<std::pair<WindowNodeState, NodeState>,  std::function<bool()>> stateTransitions;

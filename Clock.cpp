@@ -45,7 +45,7 @@ void Clock::tick() {
     // Debugging: Print current and last processed times
 
     Log tickLog("Current Time: "+std::to_string(currentTime)+", Last Processed Time: "+std::to_string(lastProcessedTime), true);
-    logger.logMessage(tickLog);
+   // logger.logMessage(tickLog);
    
     // Collect callbacks to execute between lastProcessedTime and currentTime
     std::vector<CallbackType> callbacksToExecute;
