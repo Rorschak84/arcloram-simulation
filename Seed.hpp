@@ -72,7 +72,6 @@ private:
     Logger& logger;
     std::string communicationWindow;
     std::string topology;
-    std::vector<std::pair<int, int>> nodeCoordinates;
     std::vector<std::shared_ptr<Node>> listNode;
     std::condition_variable& dispatchCv;
     std::mutex& dispatchCvMutex;

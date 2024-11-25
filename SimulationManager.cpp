@@ -1,8 +1,8 @@
 #include "SimulationManager.hpp"
 #include <iostream>
 
-SimulationManager::SimulationManager(int nbNodes, double distanceThreshold,Logger& logger) 
-    : nbNodes(nbNodes),logger(logger),distanceThreshold(distanceThreshold) {
+SimulationManager::SimulationManager( double distanceThreshold,Logger& logger) 
+    : logger(logger),distanceThreshold(distanceThreshold) {
 
 }
 

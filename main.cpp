@@ -9,10 +9,11 @@
 #include "C2_Node.hpp"
 #include "C1_Node.hpp"
 #include "Clock.hpp"
+#include "Seed.hpp"
 
 int main() {
 
-//---------------------------------Initialization---------------------------------
+//---------------------------------System Initialization---------------------------------
     //Logger
     Logger logger;
     logger.start();
@@ -24,50 +25,25 @@ int main() {
     Clock clock(logger,15);
     //convert base time to milliseconds
     int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() ;
-    baseTime+=2000; //we add 2 seconds to the base time to allow the system to stabilize
-
-
-//--------------------------------------------------------------Node Seed-------------------------------------------------
+    baseTime+=4000; //we add 4 seconds to the base time to allow the system to stabilize
 
     double distanceThreshold=1000;
     SimulationManager manager(distanceThreshold,logger);
 
+//--------------------------------------------------------------Node Seed-------------------------------------------------
+
     
     //creation of the seed
+    std::string communicationWindow = "RRC_Beacon";
+    std::string topology = "Line";
 
-
-    std::vector<std::pair<int, int>> nodeCoordinates;
-    nodeCoordinates.emplace_back(800, 50); 
-    for (int i = 1; i < nbNodes; ++i) {
-         nodeCoordinates.emplace_back(1600, 14*i); // Add a pair (i * 800, 0)
-    }
+    Seed seed(communicationWindow, topology,logger,manager.dispatchCv,manager.dispatchCvMutex,baseTime);
     
-    //create a C3 node
-    //there should be a little offset in the beginning to allow the system to stabilize
-    auto firstNode = std::make_shared<C3_Node>(0, logger, nodeCoordinates[0],manager.dispatchCv,manager.dispatchCvMutex);
-    firstNode->addActivation(baseTime+2000, WindowNodeState::CanTransmit); 
-    firstNode->addActivation(baseTime+4000, WindowNodeState::CanIdle);
-    manager.registerNode(firstNode);
+    auto nodes = seed.transferOwnership(); //the seed object memory is released safely
+    manager.takeOwnership(std::move(nodes));
 
 
-    // //create a C3 node
-    // //there should be a little offset in the beginning to allow the system to stabilize
-    // auto secondNode = std::make_shared<C3_Node>(1, logger, nodeCoordinates[1],manager.dispatchCv,manager.dispatchCvMutex);
-    // secondNode->addActivation(baseTime+2000, WindowNodeState::CanTransmit); 
-    // secondNode->addActivation(baseTime+4000, WindowNodeState::CanIdle);
-    // manager.registerNode(secondNode);
 
-
-    // Create nodes and link to the manager
-    for(int i = 1; i < manager.getNbNodes(); i++){
-       
-         auto node = std::make_shared<C2_Node>(i, logger, nodeCoordinates[2],manager.dispatchCv,manager.dispatchCvMutex); // Create a smart pointer
-        node->addActivation(baseTime+2000, WindowNodeState::CanListen); 
-        node->addActivation(baseTime+4000, WindowNodeState::CanIdle);
-        manager.registerNode(node);
-    }
-
-    //free the seed...
 
     //TODO: have a getter for the nodes list, or create a function, you should not allot the nodes to be accessible in public
     //MAKE THIS FUNCTION in the manager class? maybe not
