@@ -11,11 +11,12 @@
 
 class SimulationManager {
 public:
-    SimulationManager(int nbNodes,double distanceThreshold,Logger& logger);
+    SimulationManager(double distanceThreshold,Logger& logger);
     void startSimulation();
     void stopSimulation();
-    void registerNode(std::shared_ptr<Node> node);
-    int getNbNodes() const { return nbNodes; };
+    void takeOwnership(std::vector<std::shared_ptr<Node>> nodes);
+
+    int getNbNodes() const { return nodes.size(); };
 
     void testFunction();
     // Starts the inter-node message dispatch loop using event-based triggering
@@ -31,8 +32,8 @@ public:
     std::mutex dispatchCvMutex;         // Mutex associated with the condition variable
     std::vector<std::shared_ptr<Node>> nodes;//heterogeneous container of nodes (C1, C2...)
 private:
-    int nbNodes;
-    
+    void registerNode(std::shared_ptr<Node> node);
+
     std::vector<std::vector<std::shared_ptr<Node>>> reachableNodesPerNode;//stores the reachable nodes for each node
   
     bool checkForMessages();

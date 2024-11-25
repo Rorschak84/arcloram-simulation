@@ -40,11 +40,18 @@ void SimulationManager::stopSimulation() {
     }
 }
 
+void SimulationManager::takeOwnership(std::vector<std::shared_ptr<Node>> nodes)
+{
+    for (auto& node : nodes) {
+        registerNode(node);
+    }
+}
+
 void SimulationManager::registerNode(std::shared_ptr<Node> node) {
     if (node == nullptr) {
     throw std::invalid_argument("Cannot register a nullptr node");
     }
-    nodes.push_back(node);
+    nodes.push_back(std::move(node));
 }
 
 // Calculate Euclidean distance between two nodes
