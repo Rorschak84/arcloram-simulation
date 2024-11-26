@@ -10,15 +10,14 @@ std::string C2_Node::initMessage() const{
 
 
 
-    bool C2_Node::canIdleFromTransmitting() { return true; }
-    bool C2_Node::canIdleFromListening() { 
-            Log transitionLog("Node "+std::to_string(nodeId)+" transitioned to Idling", true);
+    bool C2_Node::canCommunicateFromTransmitting() { return true; }
+    bool C2_Node::canCommunicateFromListening() { 
+            Log transitionLog("Node "+std::to_string(nodeId)+" transitioned to Communicating", true);
             logger.logMessage(transitionLog);     
         return true; }
-    bool C2_Node::canIdleFromSleeping() { return true; }
-    bool C2_Node::canIdleFromIdling() { return true; }
+    bool C2_Node::canCommunicateFromSleeping() { return true; }
+    bool C2_Node::canCommunicateFromCommunicating() { return true; }
 
-    bool C2_Node::canTransmitFromIdling() { return true; }
     bool C2_Node::canTransmitFromListening() { return true; }
     bool C2_Node::canTransmitFromSleeping() { 
         
@@ -29,7 +28,11 @@ std::string C2_Node::initMessage() const{
         }
     bool C2_Node::canTransmitFromTransmitting() { return true; }
 
-    bool C2_Node::canListenFromIdling() { return true; }
+    bool C2_Node::canTransmitFromCommunicating()
+    {
+        return false;
+    }
+
     bool C2_Node::canListenFromTransmitting() { return true; }
     bool C2_Node::canListenFromSleeping() { 
 
@@ -40,7 +43,16 @@ std::string C2_Node::initMessage() const{
         }
     bool C2_Node::canListenFromListening() { return true; }
 
-    bool C2_Node::canSleepFromIdling() { return true; }
+    bool C2_Node::canListenFromCommunicating()
+    {
+        return false;
+    }
+
     bool C2_Node::canSleepFromTransmitting() { return true; }
     bool C2_Node::canSleepFromListening() { return true; }
     bool C2_Node::canSleepFromSleeping() { return true; }
+
+    bool C2_Node::canSleepFromCommunicating()
+    {
+        return false;
+    }

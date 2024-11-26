@@ -34,32 +34,34 @@ void Node::initializeTransitionMap(){
     // Safe to assign the C1/2/3 class's callBack function after construction
     //this function will be called in the constructor of the Child classes ! (C1, C2, C3), otherwise virtual func implementation cannot be solved
     // Define state transition rules: Proposed state -> Current state -> Condition check function
-        stateTransitions[{WindowNodeState::CanIdle, NodeState::Transmitting}] = [this]() { return canIdleFromTransmitting(); };
-        stateTransitions[{WindowNodeState::CanIdle, NodeState::Listening}] = [this]() { return canIdleFromListening(); };
-        stateTransitions[{WindowNodeState::CanIdle, NodeState::Idling}] = [this]() { return canIdleFromIdling(); };
-        stateTransitions[{WindowNodeState::CanIdle, NodeState::Sleeping}] = [this]() { return canIdleFromSleeping(); };
 
-        stateTransitions[{WindowNodeState::CanTransmit, NodeState::Idling}] = [this]() { return canTransmitFromIdling(); };
+
         stateTransitions[{WindowNodeState::CanTransmit, NodeState::Listening}] = [this]() { return canTransmitFromListening(); };
         stateTransitions[{WindowNodeState::CanTransmit, NodeState::Transmitting}] = [this]() { return canTransmitFromTransmitting(); };
         stateTransitions[{WindowNodeState::CanTransmit, NodeState::Sleeping}] = [this]() { return canTransmitFromSleeping(); };
+        stateTransitions[{WindowNodeState::CanTransmit, NodeState::Communicating}] = [this]() { return canTransmitFromCommunicating(); };
 
-        stateTransitions[{WindowNodeState::CanListen, NodeState::Idling}] = [this]() { return canListenFromIdling(); };
         stateTransitions[{WindowNodeState::CanListen, NodeState::Transmitting}] = [this]() { return canListenFromTransmitting(); };
         stateTransitions[{WindowNodeState::CanListen, NodeState::Listening}] = [this]() { return canListenFromListening(); };
         stateTransitions[{WindowNodeState::CanListen, NodeState::Sleeping}] = [this]() { return canListenFromSleeping(); };
+        stateTransitions[{WindowNodeState::CanListen, NodeState::Communicating}] = [this]() { return canListenFromCommunicating(); };
 
-        stateTransitions[{WindowNodeState::CanSleep, NodeState::Idling}] = [this]() { return canSleepFromIdling(); };
         stateTransitions[{WindowNodeState::CanSleep, NodeState::Transmitting}] = [this]() { return canSleepFromTransmitting(); };
         stateTransitions[{WindowNodeState::CanSleep, NodeState::Listening}] = [this]() { return canSleepFromListening(); };
         stateTransitions[{WindowNodeState::CanSleep, NodeState::Sleeping}] = [this]() { return canSleepFromSleeping(); };
+        stateTransitions[{WindowNodeState::CanSleep, NodeState::Communicating}] = [this]() { return canSleepFromCommunicating(); };
+
+        stateTransitions[{WindowNodeState::CanCommunicate, NodeState::Transmitting}] = [this]() { return canCommunicateFromTransmitting(); };
+        stateTransitions[{WindowNodeState::CanCommunicate, NodeState::Listening}] = [this]() { return canCommunicateFromListening(); };
+        stateTransitions[{WindowNodeState::CanCommunicate, NodeState::Sleeping}] = [this]() { return canCommunicateFromSleeping(); };
+        stateTransitions[{WindowNodeState::CanCommunicate, NodeState::Communicating}] = [this]() { return canCommunicateFromCommunicating(); };
 }
 
 
 NodeState Node::convertWindowNodeStateToNodeState(WindowNodeState state) {
         switch (state) {
-            case WindowNodeState::CanIdle:
-                return NodeState::Idling;
+            case WindowNodeState::CanCommunicate:
+                return NodeState::Communicating;
             case WindowNodeState::CanTransmit:
                 return NodeState::Transmitting;
             case WindowNodeState::CanListen:
@@ -107,15 +109,13 @@ void Node::onTimeChange(WindowNodeState proposedState) {
         } else {
             Log noTransitionLog("Node "+std::to_string(nodeId)+" No valid state transition rule found for proposed state "+std::to_string(static_cast<int>(proposedState))+" and current state "+stateToString(currentState), true);
             logger.logMessage(noTransitionLog);
-
-          
         }
          }).detach(); // Detach the thread to let it run independently
 }
 
  std::string Node::stateToString(NodeState state) {
         switch (state) {
-            case NodeState::Idling: return "Node Idling";
+            case NodeState::Communicating: return "Node Communicating";
             case NodeState::Transmitting: return "Node Transmiting";
             case NodeState::Listening: return "Node Listening";
             case NodeState::Sleeping: return "Node Sleeping";
@@ -125,13 +125,12 @@ void Node::onTimeChange(WindowNodeState proposedState) {
 
 
 
-
-//TODO: change everything to chrono + watch the prompt from chatgpt
-void Node::receiveMessage(const std::string message, std::chrono::milliseconds timeOnAir) {
+//simulate the reception of a message, including potential interferences
+void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) {
 
         // State Condition: node must be listening to receive a message
         if(currentState!=NodeState::Listening){
-            Log interferenceLog("Node "+std::to_string(nodeId)+" is not listening, message "+message+" is lost", true);
+            Log interferenceLog("Node "+std::to_string(nodeId)+" is not listening, message "+packet_to_binary(message)+" is lost", true);
             logger.logMessage(interferenceLog);
             return;
         }
@@ -142,7 +141,7 @@ void Node::receiveMessage(const std::string message, std::chrono::milliseconds t
         // Check for interference
         if (now < timeOnAirEnd.load()) {
             // Interference detected
-            Log interferenceLog("Node: "+std::to_string(nodeId)+ "receives simultaneous Msg! Dropping message: "+message, true);
+            Log interferenceLog("Node: "+std::to_string(nodeId)+ "receives simultaneous Msg! Dropping message: "+packet_to_binary(message), true);
             logger.logMessage(interferenceLog);
            
 
@@ -166,7 +165,7 @@ void Node::receiveMessage(const std::string message, std::chrono::milliseconds t
             while (std::chrono::steady_clock::now() < end) {
                 if (stopReceiving) {
                     // Interruption detected: Stop processing this message
-                     Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+message+" due to interference", true);
+                     Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
                     logger.logMessage(abortLog);
                     stopReceiving = false; // Reset the stop signal
                     return;
@@ -179,7 +178,7 @@ void Node::receiveMessage(const std::string message, std::chrono::milliseconds t
             //so we need to check if the stop signal is set
             if (stopReceiving) {
                     // Interruption detected: Stop processing this message
-                     Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+message+" due to interference", true);
+                     Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
                     logger.logMessage(abortLog);
                     stopReceiving = false; // Reset the stop signal
                     return;
@@ -189,35 +188,37 @@ void Node::receiveMessage(const std::string message, std::chrono::milliseconds t
             // If no interference occurred, the message is successfully received
             {
                 std::lock_guard<std::mutex> lock(receiveMutex);
-                receiveBuffer.push(message); // Add the message to the buffer
+
+                //should be replaced by stack.
+                receiveBuffer.push(message); 
             }
 
-            Log receivedLog("Node "+std::to_string(nodeId)+" received "+message, true);
+            Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
             logger.logMessage(receivedLog); 
         }).detach(); // Detach the thread so it runs independently
   
 }
 
-std::optional<std::string> Node::getNextReceivedMessage() { //optionnal is a way to return a value or nothing
+std::optional<std::vector<uint8_t>> Node::getNextReceivedMessage() { //optionnal is a way to return a value or nothing
     std::lock_guard<std::mutex> lock(receiveMutex);
     if (receiveBuffer.empty()) {
         return std::nullopt; //return nothing
     }
-    std::string message = receiveBuffer.front();
+    std::vector<uint8_t> message = receiveBuffer.front();
     
     //change in order to implement node behavior
     receiveBuffer.pop();
     return message;
 }
 
-void Node::addMessageToTransmit(const std::string& message,std::chrono::milliseconds timeOnAir) {
+void Node::addMessageToTransmit(const std::vector<uint8_t>& message,std::chrono::milliseconds timeOnAir) {
     {       //we add the msg to the buffer, but we need to lock the buffer before
         std::lock_guard<std::mutex> lock(transmitMutex);
         transmitBuffer.push(std::make_pair(message, timeOnAir));
     }
 
     {
-  Log queuedLog("Node "+std::to_string(nodeId)+" queued "+message+" TOA:"+std::to_string(timeOnAir.count()), true);
+  Log queuedLog("Node "+std::to_string(nodeId)+" queued "+packet_to_binary( message)+" TOA:"+std::to_string(timeOnAir.count()), true);
   logger.logMessage(queuedLog);
    //std::lock_guard<std::mutex> lockNode(dispatchCvMutex); // Lock the shared mutex for condition variable signaling
     // Notify that a new message is ready
@@ -225,12 +226,12 @@ void Node::addMessageToTransmit(const std::string& message,std::chrono::millisec
     }
 }
 
-std::optional<std::pair<std::string, std::chrono::milliseconds>>  Node::getNextTransmittingMessage() {//this is called by the transmission loop
+std::optional<std::pair<std::vector<uint8_t>, std::chrono::milliseconds>>  Node::getNextTransmittingMessage() {//this is called by the transmission loop
     std::lock_guard<std::mutex> lock(transmitMutex);
     if (transmitBuffer.empty()) {
         return std::nullopt;
     }
-    std::pair<std::string,std::chrono::milliseconds> message_TOA = transmitBuffer.front();
+    std::pair<std::vector<uint8_t>,std::chrono::milliseconds> message_TOA = transmitBuffer.front();
    
     transmitBuffer.pop();
     return message_TOA;

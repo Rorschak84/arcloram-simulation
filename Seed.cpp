@@ -1,5 +1,6 @@
 #include "Seed.hpp"
 
+//we don't adopt the real time windows for the moment, as it is really impractical (a few dowens of ms every minutes...)
 
 
 
@@ -30,19 +31,35 @@
 
     void Seed::initialize_RRC_Beacon_Line(){
        
+        unsigned int lengthTransmissionWindow = 500;
+        unsigned int lengthSleepingWindow = 1000;
+
+        unsigned int nbComWindows =40;
+
         //create a C3 node
         std::pair<int, int> coordinates = std::make_pair(0, 0);
         auto firstNode = std::make_shared<C3_Node>(0, logger, coordinates,dispatchCv,dispatchCvMutex);
-        firstNode->addActivation(baseTime+2000, WindowNodeState::CanTransmit); 
-        firstNode->addActivation(baseTime+4000, WindowNodeState::CanIdle);
+
+        for (size_t i = 0; i < nbComWindows; i++)
+        {   
+            firstNode->addActivation(baseTime+(i+1)*lengthSleepingWindow+i*lengthTransmissionWindow, WindowNodeState::CanTransmit); //the C3 is only transmitting in this mode
+        
+            firstNode->addActivation(baseTime+(i+1)*lengthSleepingWindow+(i+1)*lengthTransmissionWindow, WindowNodeState::CanSleep);
+        }
+        
         listNode.push_back(firstNode);
         
          // Create C2 nodes in a line
         for(int i = 1; i<5; i++){
             std::pair<int, int> coordinate = std::make_pair(800*i, 0);
             auto node = std::make_shared<C2_Node>(i, logger, coordinate,dispatchCv,dispatchCvMutex); // Create a smart pointer
-            node->addActivation(baseTime+2000, WindowNodeState::CanListen); 
-            node->addActivation(baseTime+4000, WindowNodeState::CanIdle);
+
+            for (size_t i = 0; i < nbComWindows; i++)
+            {   
+                node->addActivation(baseTime+(i+1)*lengthSleepingWindow+i*lengthTransmissionWindow, WindowNodeState::CanCommunicate); //the C3 is only transmitting in this mode
+            
+                node->addActivation(baseTime+(i+1)*lengthSleepingWindow+(i+1)*lengthTransmissionWindow, WindowNodeState::CanSleep);
+            }
             listNode.push_back(node);
         }
 

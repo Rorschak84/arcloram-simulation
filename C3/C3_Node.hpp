@@ -1,5 +1,5 @@
 #pragma once
-#include "Node.hpp"
+#include "../Node.hpp"
 
 
 class C3_Node : public Node {
@@ -19,23 +19,24 @@ public :
     std::string initMessage() const override;
 
 protected:
-    bool canIdleFromTransmitting();
-    bool canIdleFromListening();
-    bool canIdleFromSleeping();
-    bool canIdleFromIdling();
-
-    bool canTransmitFromIdling();
     bool canTransmitFromListening();
     bool canTransmitFromSleeping();
     bool canTransmitFromTransmitting();
+    bool canTransmitFromCommunicating();
 
-    bool canListenFromIdling();
     bool canListenFromTransmitting();
     bool canListenFromSleeping();
     bool canListenFromListening();
+    bool canListenFromCommunicating();
 
-    bool canSleepFromIdling();
     bool canSleepFromTransmitting();
     bool canSleepFromListening();
     bool canSleepFromSleeping();
+    bool canSleepFromCommunicating();
+
+    bool canCommunicateFromTransmitting();
+    bool canCommunicateFromListening();
+    bool canCommunicateFromSleeping();
+    bool canCommunicateFromCommunicating();
+
 };

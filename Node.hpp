@@ -17,20 +17,24 @@
 #include <sstream>
 #include <map>
 #include <atomic>
+#include "PacketTool.hpp"
+
+
 
 // Enum representing possible states for nodes
 enum class NodeState {
-    Idling,
     Transmitting,
     Listening,
-    Sleeping
+    Sleeping,
+    Communicating
 };
 
 enum class WindowNodeState{
-    CanIdle,
+    
     CanTransmit,
     CanListen,
-    CanSleep
+    CanSleep,
+    CanCommunicate //mixed state of CanTransmit and CanListen
 };
 
 class Node {
@@ -48,9 +52,9 @@ public:
     virtual std::string initMessage() const;//default message to be logged when the node starts
 
     //used by simulation manager
-    void receiveMessage(const std::string message, std::chrono::milliseconds timeOnAir);//add a message to the receiving buffer
-    std::optional<std::pair<std::string,std::chrono::milliseconds>> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
-    std::optional<std::string> getNextReceivedMessage();// .... from the receiving buffer
+    void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir);//add a message to the receiving buffer
+    std::optional<std::pair<std::vector<uint8_t>,std::chrono::milliseconds>> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
+    std::optional<std::vector<uint8_t>> getNextReceivedMessage();// .... from the receiving buffer
     bool hasNextTransmittingMessage() ;//this is called by the transmission loop
 
     //getters
@@ -63,7 +67,7 @@ public:
     }
 
      //add TDMA
-     void addActivation(int64_t activationTime, WindowNodeState activationState);
+     void addActivation( int64_t activationTime, WindowNodeState activationState);
              
     const std::vector<std::pair<int64_t, WindowNodeState>>& getActivationSchedule() const {
         return activationSchedule;
@@ -81,8 +85,8 @@ protected:
     Logger& logger;
 
     // Buffers for receiving and transmitting messages
-    std::queue<std::string> receiveBuffer;
-    std::queue<std::pair<std::string,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
+    std::queue<std::vector<uint8_t>> receiveBuffer;
+    std::queue<std::pair<std::vector<uint8_t>,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
  
     //to simulate interferences:
     std::atomic<std::chrono::steady_clock::time_point> timeOnAirEnd{std::chrono::steady_clock::now()}; // End of current Time On Air
@@ -98,7 +102,7 @@ protected:
 
     //methods
     //the node adds a message to the transmitting buffer and notifies the simulation manager
-    void addMessageToTransmit(const std::string& message,std::chrono::milliseconds timeOnAir);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
+    void addMessageToTransmit(const std::vector<uint8_t>& message,const std::chrono::milliseconds timeOnAir);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
 
 
     //---------------------------------------TDMA-------------------------------------
@@ -119,27 +123,27 @@ protected:
     //we need to define in child classes the state machine
     //convention for the name of the methods:
     //proposedWindowStateFromCurrentState: IdleFromTransmit
-    
-    virtual bool canIdleFromTransmitting()=0;
-    virtual bool canIdleFromListening()=0;
-    virtual bool canIdleFromSleeping()=0;
-    virtual bool canIdleFromIdling()=0;
 
-    virtual bool canTransmitFromIdling()=0;
     virtual bool canTransmitFromListening()=0;
     virtual bool canTransmitFromSleeping()=0;
     virtual bool canTransmitFromTransmitting()=0;
+    virtual bool canTransmitFromCommunicating()=0;
 
-    virtual bool canListenFromIdling()=0;
     virtual bool canListenFromTransmitting()=0;
     virtual bool canListenFromSleeping()=0;
     virtual bool canListenFromListening()=0;
+    virtual bool canListenFromCommunicating()=0;
 
-    virtual bool canSleepFromIdling()=0;
     virtual bool canSleepFromTransmitting()=0;
     virtual bool canSleepFromListening()=0;
     virtual bool canSleepFromSleeping()=0;
+    virtual bool canSleepFromCommunicating()=0;
 
+    virtual bool canCommunicateFromTransmitting()=0;
+    virtual bool canCommunicateFromListening()=0;
+    virtual bool canCommunicateFromSleeping()=0;
+    virtual bool canCommunicateFromCommunicating()=0;
+   
     void initializeTransitionMap();
 
 };

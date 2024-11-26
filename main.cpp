@@ -5,9 +5,9 @@
 #include <atomic>
 #include <list>
 #include <conio.h> // For _kbhit() and _getch()
-#include "C3_Node.hpp"
-#include "C2_Node.hpp"
-#include "C1_Node.hpp"
+#include "C3/C3_Node.hpp"
+#include "C2/C2_Node.hpp"
+#include "C1/C1_Node.hpp"
 #include "Clock.hpp"
 #include "Seed.hpp"
 
@@ -25,7 +25,7 @@ int main() {
     Clock clock(logger,15);
     //convert base time to milliseconds
     int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() ;
-    baseTime+=4000; //we add 4 seconds to the base time to allow the system to stabilize
+    baseTime+=1000; //we add 4 seconds to the base time to allow the system to stabilize
 
     double distanceThreshold=1000;
     SimulationManager manager(distanceThreshold,logger);
@@ -72,7 +72,7 @@ int main() {
         // Background thread that runs the simulation
          clock.start();
         while (running) {
-            //TODO: verify it's not destroying the performance
+            //TODO: verify it's not destroying the performance, add a delay?
         }
     });
 

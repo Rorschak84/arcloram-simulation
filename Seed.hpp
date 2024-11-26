@@ -6,9 +6,9 @@
 #include "Node.hpp"
 #include "Logger.hpp"
 #include <utility> // For std::pair
-#include "C3_Node.hpp"
-#include "C2_Node.hpp"
-#include "C1_Node.hpp"
+#include "C3/C3_Node.hpp"
+#include "C2/C2_Node.hpp"
+#include "C1/C1_Node.hpp"
 
 /*
                 USE CASES:

@@ -136,7 +136,7 @@ bool SimulationManager::checkForMessages(){
 
 void SimulationManager::ProcessMessages(){
         for (const auto& node : nodes) {
-            std::optional<std::pair<std::string, std::chrono::milliseconds>> message = node->getNextTransmittingMessage();
+            std::optional<std::pair<std::vector<uint8_t>, std::chrono::milliseconds>> message = node->getNextTransmittingMessage();
             if (message.has_value()) {
                 Log hasValue("Node "+std::to_string(node->getId())+" msg is processed", true);
                  logger.logMessage(hasValue);
