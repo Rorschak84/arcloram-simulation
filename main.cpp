@@ -10,6 +10,10 @@
 #include "C1/C1_Node.hpp"
 #include "Clock.hpp"
 #include "Seed.hpp"
+#include "Common.hpp"
+
+
+
 
 int main() {
 
@@ -33,11 +37,9 @@ int main() {
 //--------------------------------------------------------------Node Seed-------------------------------------------------
 
     
-    //creation of the seed
-    std::string communicationWindow = "RRC_Beacon";
-    std::string topology = "Line";
+ 
 
-    Seed seed(communicationWindow, topology,logger,manager.dispatchCv,manager.dispatchCvMutex,baseTime);
+    Seed seed(std::string(communicationMode), std::string(topology),logger,manager.dispatchCv,manager.dispatchCvMutex,baseTime);
     
     auto nodes = seed.transferOwnership(); //the seed object memory is released safely
     manager.takeOwnership(std::move(nodes));
