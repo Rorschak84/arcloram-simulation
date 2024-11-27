@@ -25,11 +25,11 @@ int main() {
     //Clock
      // Create a clock with a tick time of 5 milliseconds (it's actually a scheduler )
      //there is a tradeoff between the performance of the simulation and the representation of real signals that are in the order of milliseconds
-     //TODO: change the name of CLock by Scheduler
-    Clock clock(logger,100);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
+     //TODO: make the tick interval configurable in common
+    Clock clock(logger,tickIntervalForClock_ms);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
     //convert base time to milliseconds
     int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() ;
-    baseTime+=1000; //we add 4 seconds to the base time to allow the system to stabilize
+    baseTime+=baseTimeOffset; //allow the system to initialize before the TDMA begins
 
     double distanceThreshold=1000;
     SimulationManager manager(distanceThreshold,logger);
@@ -57,7 +57,7 @@ int main() {
                 ptrNode->onTimeChange(windowNodeState);//onTimeChange will call the callback associated with the proposed state and the currentState stored in the stateTransitions variable
             });
         }
-    }
+    } 
 
   
 //---------------------------------Background---------------------------------
@@ -75,6 +75,8 @@ int main() {
          clock.start();
         while (running) {
             //TODO: verify it's not destroying the performance, add a delay?
+            std::this_thread::sleep_for(std::chrono::milliseconds(300)); // Avoid busy-waiting
+
         }
     });
 
@@ -84,6 +86,7 @@ int main() {
 
     //we want to stop the simulation when user clicks "q"
     while (running) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(300)); // Avoid busy-waiting
         if (_kbhit()) { // Check if a key has been pressed
             char c = _getch(); // Get the character
             if (c == 'q') {
@@ -92,6 +95,8 @@ int main() {
                 logger.logMessage(stoppingLog);
             }
         }
+       
+
     }
 
 //---------------------------------End---------------------------------

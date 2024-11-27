@@ -23,14 +23,10 @@ void SimulationManager::startSimulation() {
 
           std::thread t(&Node::run, node);
            t.detach();
-        */
-        
+        */ 
         Log initialNodeLog(node->initMessage(), true);
         logger.logMessage(initialNodeLog);
-       
     }
-
-
 }
 
 void SimulationManager::stopSimulation() {
@@ -138,9 +134,11 @@ void SimulationManager::ProcessMessages(){
         for (auto& node : nodes) {
             std::optional<std::pair<std::vector<uint8_t>, std::chrono::milliseconds>> message = node->getNextTransmittingMessage();
             if (message.has_value()) {
-                Log hasValue("Node "+std::to_string(node->getId())+" msg is processed", true);
-                 logger.logMessage(hasValue);
+                // Log hasValue("Node "+std::to_string(node->getId())+" msg is processed", true);
+                //  logger.logMessage(hasValue);
                 for ( auto& reachableNode : reachableNodesPerNode[node->getId()]) {
+                    
+                    //maybe launch a thread in detach mode here
                     reachableNode->receiveMessage(message->first, message->second);
                 }
             }

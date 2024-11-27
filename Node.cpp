@@ -5,6 +5,7 @@
 Node::Node(int id, Logger& logger, std::pair<int,int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex)
     : nodeId(id), running(true),logger(logger), coordinates(coordinates), dispatchCv(dispatchCv), dispatchCvMutex(dispatchCvMutex) {
     // Constructor implementation
+    timeOnAirEnd={std::chrono::steady_clock::now()};//for interference, this is the new reference point
 }
 
 
@@ -92,7 +93,8 @@ void Node::onTimeChange(WindowNodeState proposedState) {
             if (it->second()) {
                 // Transition is valid, so update the current state
                 try {
-                    currentState = convertWindowNodeStateToNodeState(proposedState);
+                    //we cannot do this, we need to change the currentstate before performing the operation related to the proposed state that is valid
+                    //currentState = convertWindowNodeStateToNodeState(proposedState);
 
                     //Log Msg is in the callback function bc we might provide additional info.
 
@@ -114,6 +116,7 @@ void Node::onTimeChange(WindowNodeState proposedState) {
             logger.logMessage(noTransitionLog);
         }
          }).detach(); // Detach the thread to let it run independently
+
 }
 
  std::string Node::stateToString(NodeState state) {
@@ -139,18 +142,14 @@ std::string Node::stateToString(WindowNodeState state) {
 //simulate the reception of a message, including potential interferences
 void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) {
 
-        // State Condition: node must be listening to receive a message
-        if(currentState!=NodeState::Listening&&currentState!=NodeState::Communicating){
-            Log interferenceLog("Node "+std::to_string(nodeId)+" is not listening, message "+packet_to_binary(message)+" is lost", true);
-            logger.logMessage(interferenceLog);
-            return;
-        }
+
 
 
         auto now = std::chrono::steady_clock::now();
         auto newEndTime = now + timeOnAir;
         // Check for interference
         if (now < timeOnAirEnd.load()) {
+
             // Interference detected
             Log interferenceLog("Node: "+std::to_string(nodeId)+ "receives simultaneous Msg! Dropping message: "+packet_to_binary(message), true);
             logger.logMessage(interferenceLog);
@@ -176,13 +175,13 @@ void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
             while (std::chrono::steady_clock::now() < end) {
                 if (stopReceiving) {
                     // Interruption detected: Stop processing this message
-                     Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
+                     Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "+packet_to_binary(message)+" due to interference", true);
                     logger.logMessage(abortLog);
                     stopReceiving = false; // Reset the stop signal
                     return;
                 }
                 //TODO: declare a global variable that will manage this ticks intervals!
-                std::this_thread::sleep_for(std::chrono::milliseconds(15)); // Avoid busy-waiting
+                std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Avoid busy-waiting
             }
 
             //sometimes the thread scheduler makes the worker thread "misses" the condition on the time on ai
@@ -204,8 +203,8 @@ void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
             }
 
             //this log will be printed in the receive func of the child class, containing additionnal behaviour    
-             Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
-             logger.logMessage(receivedLog); 
+            //  Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
+            //  logger.logMessage(receivedLog); 
         }).detach(); // Detach the thread so it runs independently
   
 }
@@ -222,7 +221,7 @@ std::optional<std::vector<uint8_t>> Node::getNextReceivedMessage() { //optionnal
     return message;
 }
 
-void Node::addMessageToTransmit(const std::vector<uint8_t>& message,std::chrono::milliseconds timeOnAir) {
+void Node::addMessageToTransmit(const std::vector<uint8_t> message,std::chrono::milliseconds timeOnAir) {
     {       //we add the msg to the buffer, but we need to lock the buffer before
         std::lock_guard<std::mutex> lock(transmitMutex);
         transmitBuffer.push(std::make_pair(message, timeOnAir));

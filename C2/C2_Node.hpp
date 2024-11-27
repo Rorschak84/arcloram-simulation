@@ -42,11 +42,21 @@ public :
     bool canCommunicateFromSleeping();
     bool canCommunicateFromCommunicating();
 
+    void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
 
     #if COMMUNICATION_PERIOD == RRC_BEACON
 
-    //we should move this to the general definition bc it is the same for all Modes (not the implementation though)
-    //void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
+        bool shouldSendBeacon=false;
+        short hopCount=-1;
+        std::vector<int> beaconSlots;
+         
+        int computeRandomNbBeaconPackets();
+        //selecte m slots randomly in the n slots, and return an orderred list of the selected slots
+        std::vector<int> selectRandomSlots(int m);
+
+        bool canNodeReceiveMessage();
+        bool isTransmittingWhileCommunicating=false;
+
 
     #else
         #error "Unknown COMMUNICATION_PERIOD mode"

@@ -76,7 +76,7 @@ public:
     }
 
      void onTimeChange(WindowNodeState proposedState);
-
+     
 protected:
 
     //variables
@@ -90,7 +90,7 @@ protected:
     std::queue<std::pair<std::vector<uint8_t>,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
  
     //to simulate interferences:
-    std::atomic<std::chrono::steady_clock::time_point> timeOnAirEnd{std::chrono::steady_clock::now()}; // End of current Time On Air
+    std::atomic<std::chrono::steady_clock::time_point> timeOnAirEnd; // End of current Time On Air
     std::atomic<bool> stopReceiving{false};           // Signals the active thread to stop
 
     // Mutexes to protect the buffers
@@ -103,7 +103,7 @@ protected:
 
     //methods
     //the node adds a message to the transmitting buffer and notifies the simulation manager
-    void addMessageToTransmit(const std::vector<uint8_t>& message,const std::chrono::milliseconds timeOnAir);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
+    void addMessageToTransmit(const std::vector<uint8_t> message,const std::chrono::milliseconds timeOnAir);//add a message to the transmitting buffer, this method is private because it is only called by the node itself
 
 
     //---------------------------------------TDMA-------------------------------------

@@ -31,11 +31,7 @@
 
     void Seed::initialize_RRC_Beacon_Line(){
        
-       //TODO: THIS SHOULD BE PUT INTO COMMON
-        unsigned int lengthTransmissionWindow = 500;
-        unsigned int lengthSleepingWindow = 1000;
 
-        unsigned int nbComWindows =40;
 
         //create a C3 node
         std::pair<int, int> coordinates = std::make_pair(0, 0);

@@ -43,20 +43,12 @@ std::string C3_Node::initMessage() const{
 
     //---------------------------state Transition--------------------
     bool C3_Node::canTransmitFromSleeping() { 
-        
-        Log transitionLog("Node "+std::to_string(nodeId)+" is in transmission Mode", true);
-        logger.logMessage(transitionLog);  
 
-
-        //TODO change the current state here and erase in the onTimeChange, doesn't make sense !!
-
-        // Sleep for 30 ms to be sure other nodes are listening, this offset represents the 
-        //beginning of the transmission window in the communication window+the guard time.
-        //I'm afraid this guard time also depends of the number of nodes performing tasks at the same time... (small impact though)
-        std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
-
+        currentState=NodeState::Transmitting;
+        // Log transitionLog("Node "+std::to_string(nodeId)+" is in transmission Mode", true);
+        // logger.logMessage(transitionLog);  
         if(beaconSlots.size()==0 && !shouldSendBeacon){
-            return true;//we finished to send our beacons, but the node stays in transmission mode to not fuck up my implementation lol
+            return true;//we finished to send our beacons, but the node stays in transmission mode to not fuck up my implementation lol, would be possible to implement this behaviour but it's just simpler like this
                         //overall this simulator is far from being close to a real behavior of a node
         }
         else if(beaconSlots.size()==0 &&shouldSendBeacon){// we compute the randomness of slots (see the thesis report)
@@ -67,32 +59,20 @@ std::string C3_Node::initMessage() const{
         if(beaconSlots[0]==0){
             //send the beacon
             std::vector<uint8_t> beaconPacket = {0x01, 0x02, 0x03, 0x04};
-            addMessageToTransmit(beaconPacket,std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(guardTime)); 
+            addMessageToTransmit(beaconPacket,std::chrono::milliseconds(timeOnAirBeacon));
             //erase the first element of the list
             beaconSlots.erase(beaconSlots.begin());
-            //decrease every elements of the slots by one
-            for(int i=0;i<beaconSlots.size();i++){
-                beaconSlots[i]--;
-            }
-
         }
-        else{
-            //decrease every elements of the slots by one
-            //decrease every elements of the slots by one
-            for(int i=0;i<beaconSlots.size();i++){
-                beaconSlots[i]--;
-            }
+        //decrease every elements of the slots by one
+        for(int i=0;i<beaconSlots.size();i++){
+            beaconSlots[i]--;
         }
-        
-
-
-
- 
         return true;
-        }
+    }
 
     bool C3_Node::canSleepFromTransmitting() { 
-        
+        currentState=NodeState::Sleeping;
         Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
         logger.logMessage(transitionLog);  
         return true; 
