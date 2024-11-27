@@ -93,6 +93,9 @@ void Node::onTimeChange(WindowNodeState proposedState) {
                 // Transition is valid, so update the current state
                 try {
                     currentState = convertWindowNodeStateToNodeState(proposedState);
+
+                    //Log Msg is in the callback function bc we might provide additional info.
+
                 }catch(const std::invalid_argument& e){
                     Log invalidArg("Node "+std::to_string(nodeId)+"cannot convert proposed window state to Node State: current Node Sate."+e.what(), true);
                     logger.logMessage(invalidArg);
@@ -103,7 +106,7 @@ void Node::onTimeChange(WindowNodeState proposedState) {
                 //     logger.logMessage(transitionLog);   
              } else {
 
-                Log failedTransitionLog("Node "+std::to_string(nodeId)+" transition from "+stateToString(currentState)+" to proposed state failed due to conditions.", true);
+                Log failedTransitionLog("Node "+std::to_string(nodeId)+" transition from "+stateToString(currentState)+" to "+stateToString(proposedState)+ " failed", true);
                logger.logMessage(failedTransitionLog);
             }
         } else {
@@ -115,21 +118,29 @@ void Node::onTimeChange(WindowNodeState proposedState) {
 
  std::string Node::stateToString(NodeState state) {
         switch (state) {
-            case NodeState::Communicating: return "Node Communicating";
-            case NodeState::Transmitting: return "Node Transmiting";
-            case NodeState::Listening: return "Node Listening";
-            case NodeState::Sleeping: return "Node Sleeping";
+            case NodeState::Communicating: return " Communicating";
+            case NodeState::Transmitting: return " Transmiting";
+            case NodeState::Listening: return " Listening";
+            case NodeState::Sleeping: return " Sleeping";
             default: return "Unknown";
         }
     }
 
-
+std::string Node::stateToString(WindowNodeState state) {
+    switch (state) {
+        case WindowNodeState::CanTransmit: return "Transmit";
+        case WindowNodeState::CanListen: return " Listen";
+        case WindowNodeState::CanCommunicate: return " Communicate";
+        case WindowNodeState::CanSleep: return " Sleep";
+        default: return "Unknown";
+    }
+}
 
 //simulate the reception of a message, including potential interferences
 void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) {
 
         // State Condition: node must be listening to receive a message
-        if(currentState!=NodeState::Listening){
+        if(currentState!=NodeState::Listening&&currentState!=NodeState::Communicating){
             Log interferenceLog("Node "+std::to_string(nodeId)+" is not listening, message "+packet_to_binary(message)+" is lost", true);
             logger.logMessage(interferenceLog);
             return;
@@ -188,13 +199,13 @@ void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
             // If no interference occurred, the message is successfully received
             {
                 std::lock_guard<std::mutex> lock(receiveMutex);
-
                 //should be replaced by stack.
                 receiveBuffer.push(message); 
             }
 
-            Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
-            logger.logMessage(receivedLog); 
+            //this log will be printed in the receive func of the child class, containing additionnal behaviour    
+             Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
+             logger.logMessage(receivedLog); 
         }).detach(); // Detach the thread so it runs independently
   
 }

@@ -26,7 +26,7 @@ int main() {
      // Create a clock with a tick time of 5 milliseconds (it's actually a scheduler )
      //there is a tradeoff between the performance of the simulation and the representation of real signals that are in the order of milliseconds
      //TODO: change the name of CLock by Scheduler
-    Clock clock(logger,15);
+    Clock clock(logger,100);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
     //convert base time to milliseconds
     int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() ;
     baseTime+=1000; //we add 4 seconds to the base time to allow the system to stabilize
@@ -34,7 +34,7 @@ int main() {
     double distanceThreshold=1000;
     SimulationManager manager(distanceThreshold,logger);
 
-//--------------------------------------------------------------Node Seed-------------------------------------------------
+//--------------------------------------------------------------Node Provisionning-------------------------------------------------
 
     
  

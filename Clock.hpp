@@ -29,11 +29,15 @@ private:
     Logger& logger;
     
     int64_t lastProcessedTime;
- void tick();
+    void tick();
+    unsigned int compteurTick;
+
 
 public:
     Clock( Logger& logger,int baseUnitMilliseconds = 10) 
-        : running(false), tickInterval(baseUnitMilliseconds), lastProcessedTime(0),logger(logger) {}
+        : running(false), tickInterval(baseUnitMilliseconds), lastProcessedTime(0),logger(logger) {
+            compteurTick=0;
+        }
 
     void start() ;
 

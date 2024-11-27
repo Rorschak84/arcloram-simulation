@@ -11,7 +11,7 @@ void Clock::start(){
         lastProcessedTime = currentTimeInMilliseconds();
         Log startingLog("time start: "+std::to_string(lastProcessedTime), true);
         logger.logMessage(startingLog);
-      
+        
         clockThread= std::thread([this]() {
             auto nextTick = std::chrono::steady_clock::now();
             while (running) {
@@ -20,7 +20,15 @@ void Clock::start(){
                 nextTick += tickInterval;
 
                 tick();
-                std::this_thread::sleep_until(nextTick);
+                if(nextTick<std::chrono::steady_clock::now()){
+                    throw std::runtime_error("Missed tick-Unpredictable Behaviour");
+                    //when this happens, increase the tick interval
+                    // Log missedTick("Missed tick", true);
+                    // logger.logMessage(missedTick);
+                }
+                else{
+                    std::this_thread::sleep_until(nextTick);
+                }
             }
         });
     }
@@ -33,7 +41,7 @@ void Clock::stop(){
     }
 
 void Clock::tick() {
-
+    compteurTick++;
 
     //Collect the callbacks during the last processed time and the current time
     //execute them in the order they were scheduled
@@ -44,7 +52,7 @@ void Clock::tick() {
 
     // Debugging: Print current and last processed times
 
-    Log tickLog("Current Time: "+std::to_string(currentTime)+", Last Processed Time: "+std::to_string(lastProcessedTime), true);
+    //Log tickLog("Current Time: "+std::to_string(currentTime)+", Last Processed Time: "+std::to_string(lastProcessedTime), true);
    // logger.logMessage(tickLog);
    
     // Collect callbacks to execute between lastProcessedTime and currentTime
@@ -60,15 +68,15 @@ void Clock::tick() {
            
         } else {
 
-            Log callbacks("Callbacks found for time: "+std::to_string(time), true);
+            Log callbacks("In tick: "+std::to_string(compteurTick)+ " callbacks found for time: "+std::to_string(time), true);
             logger.logMessage(callbacks);
-           
-          
+            for (auto it = range.first; it != range.second; ++it) {
+                callbacksToExecute.push_back(it->second); // Collect the callback
+            }
+            
         }
 
-        for (auto it = range.first; it != range.second; ++it) {
-            callbacksToExecute.push_back(it->second); // Collect the callback
-        }
+       
     }
 
     // Update last processed time
@@ -76,6 +84,10 @@ void Clock::tick() {
 
     // Execute collected callbacks outside of the iteration loop
     for (const auto& callback : callbacksToExecute) {
+
+        //Maybe make a mechanism where we launch all the callbacks and we join them afterwards.
+        //maybe also freeze the clock during that time, we are not doing a real time system
+        //but that means nothing is in detached mode.
         callback();
     }
 }

@@ -10,25 +10,54 @@ std::string C3_Node::initMessage() const{
 }
 
 
-    bool C3_Node::canTransmitFromListening() { return true; }
+#if COMMUNICATION_PERIOD == RRC_BEACON
+
+    //-----------------------utilities------------------
+    int C3_Node::computeRandomNbBeaconPackets() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(minimumNbBeaconPackets, maximumNbBeaconPackets);
+        return dis(gen);
+    }
+    std::vector<int> C3_Node::selectRandomSlots(int m) {
+    
+        // Step 1: Create a vector of slots [0, 1, ..., n-1]
+        std::vector<int> slots(nbSlotsPossibleForOneBeacon);
+        for (int i = 0; i < nbSlotsPossibleForOneBeacon; ++i) {
+            slots[i] = i;
+        }
+
+        // Step 2: Shuffle the vector randomly
+        std::random_device rd;  // Seed for random number generator
+        std::mt19937 rng(rd()); // Mersenne Twister RNG
+        std::shuffle(slots.begin(), slots.end(), rng);
+
+        // Step 3: Take the first m slots
+        std::vector<int> selected(slots.begin(), slots.begin() + m);
+        
+        // Step 4: Sort the selected slots in ascending order
+        std::sort(selected.begin(), selected.end());
+
+        return selected;
+    }
+
+    //---------------------------state Transition--------------------
     bool C3_Node::canTransmitFromSleeping() { 
         
-        Log transitionLog("Node "+std::to_string(nodeId)+" transitioned to Transmitting", true);
+        Log transitionLog("Node "+std::to_string(nodeId)+" is in transmission Mode", true);
         logger.logMessage(transitionLog);  
 
 
         //TODO change the current state here and erase in the onTimeChange, doesn't make sense !!
 
-
-
         // Sleep for 30 ms to be sure other nodes are listening, this offset represents the 
         //beginning of the transmission window in the communication window+the guard time.
         //I'm afraid this guard time also depends of the number of nodes performing tasks at the same time... (small impact though)
-        //TODO: try to use steady_clock instead of system_clock when you can to migitate the impact of the system on the time
         std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
 
         if(beaconSlots.size()==0 && !shouldSendBeacon){
-            return false;//we finished to send our beacons
+            return true;//we finished to send our beacons, but the node stays in transmission mode to not fuck up my implementation lol
+                        //overall this simulator is far from being close to a real behavior of a node
         }
         else if(beaconSlots.size()==0 &&shouldSendBeacon){// we compute the randomness of slots (see the thesis report)
             shouldSendBeacon=false;
@@ -38,16 +67,21 @@ std::string C3_Node::initMessage() const{
         if(beaconSlots[0]==0){
             //send the beacon
             std::vector<uint8_t> beaconPacket = {0x01, 0x02, 0x03, 0x04};
-
             addMessageToTransmit(beaconPacket,std::chrono::milliseconds(500));
-
             //erase the first element of the list
-
+            beaconSlots.erase(beaconSlots.begin());
             //decrease every elements of the slots by one
+            for(int i=0;i<beaconSlots.size();i++){
+                beaconSlots[i]--;
+            }
 
         }
         else{
             //decrease every elements of the slots by one
+            //decrease every elements of the slots by one
+            for(int i=0;i<beaconSlots.size();i++){
+                beaconSlots[i]--;
+            }
         }
         
 
@@ -57,47 +91,32 @@ std::string C3_Node::initMessage() const{
         return true;
         }
 
+    bool C3_Node::canSleepFromTransmitting() { 
+        
+        Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
+        logger.logMessage(transitionLog);  
+        return true; 
+        }
 
-    bool C3_Node::canTransmitFromTransmitting() { return true; }
 
-    bool C3_Node::canTransmitFromCommunicating()
-    {
-        return false;
-    }
+    //Unauthorized transition in this mode.
+    bool C3_Node::canTransmitFromTransmitting() { return false; }
+    bool C3_Node::canTransmitFromCommunicating(){return false;}
+    bool C3_Node::canTransmitFromListening() { return false; }
+    bool C3_Node::canListenFromTransmitting() { return false; }
+    bool C3_Node::canListenFromSleeping() { return false; }
+    bool C3_Node::canListenFromListening() { return false; }
+    bool C3_Node::canListenFromCommunicating(){return true;}
+    bool C3_Node::canSleepFromListening() { return false; }
+    bool C3_Node::canSleepFromSleeping() { return false; }
+    bool C3_Node::canSleepFromCommunicating(){return false;}
+    bool C3_Node::canCommunicateFromTransmitting(){return false;}
+    bool C3_Node::canCommunicateFromListening(){return false;}
+    bool C3_Node::canCommunicateFromSleeping(){return false;}
+    bool C3_Node::canCommunicateFromCommunicating(){return false;}
 
-    bool C3_Node::canListenFromTransmitting() { return true; }
-    bool C3_Node::canListenFromSleeping() { return true; }
-    bool C3_Node::canListenFromListening() { return true; }
-    bool C3_Node::canListenFromCommunicating()
-    {
-        return true;
-    }
 
-    bool C3_Node::canSleepFromTransmitting() { return true; }
-    bool C3_Node::canSleepFromListening() { return true; }
-    bool C3_Node::canSleepFromSleeping() { return true; }
+#else
+    #error "Unknown COMMUNICATION_PERIOD mode"
+#endif
 
-    bool C3_Node::canSleepFromCommunicating()
-    {
-        return true;
-    }
-
-    bool C3_Node::canCommunicateFromTransmitting()
-    {
-        return true;
-    }
-
-    bool C3_Node::canCommunicateFromListening()
-    {
-        return true;
-    }
-
-    bool C3_Node::canCommunicateFromSleeping()
-    {
-        return true;
-    }
-
-    bool C3_Node::canCommunicateFromCommunicating()
-    {
-        return true;
-    }

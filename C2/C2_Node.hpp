@@ -41,4 +41,14 @@ public :
     bool canCommunicateFromListening();
     bool canCommunicateFromSleeping();
     bool canCommunicateFromCommunicating();
+
+
+    #if COMMUNICATION_PERIOD == RRC_BEACON
+
+    //we should move this to the general definition bc it is the same for all Modes (not the implementation though)
+    //void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
+
+    #else
+        #error "Unknown COMMUNICATION_PERIOD mode"
+    #endif
 };

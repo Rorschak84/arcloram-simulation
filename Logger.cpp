@@ -41,7 +41,7 @@
 
         std::vector<std::string> textBuffer; // Buffer for batch processing
         std::vector<std::string> terminalBuffer; // Buffer for batch processing
-        const size_t maxTerminalBufferSize = 1; // Set a buffer size limit
+        const size_t maxTerminalBufferSize = 5; // Set a buffer size limit
         const size_t maxTextBufferSize = 3; // Set a buffer size limit
 
 

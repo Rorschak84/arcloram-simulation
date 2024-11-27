@@ -31,6 +31,7 @@
 
     void Seed::initialize_RRC_Beacon_Line(){
        
+       //TODO: THIS SHOULD BE PUT INTO COMMON
         unsigned int lengthTransmissionWindow = 500;
         unsigned int lengthSleepingWindow = 1000;
 

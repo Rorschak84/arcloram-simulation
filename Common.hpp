@@ -1,23 +1,33 @@
-#pragma once
+#ifndef COMMON_HPP
+#define COMMON_HPP
+
+/*
+*   Define the Topology Desired and the Communication Period Mode in the two preprocessor Macros
+*   Every parameters suceptible to changes are also defined here, making an easy way to fine tune parameters
+*   for optimal protocol parameters
+*/
+
 
 
 // Define modes as preprocessor macros
 #define COMMUNICATION_PERIOD RRC_BEACON
 #define TOPOLOGY Line
 
-// Conditionally compile based on COMMUNICATION_PERIOD
 #if COMMUNICATION_PERIOD == RRC_BEACON
-    const char* communicationMode = "RRC_Beacon";
-    //TODO: eventually define others parameters of mode here, such as the max min number of beacon packets
+
+    constexpr const char* communicationMode = "RRC_Beacon";
+    constexpr const int minimumNbBeaconPackets=2;
+    constexpr const int maximumNbBeaconPackets=4;
+    constexpr const int nbSlotsPossibleForOneBeacon=10;
 #elif COMMUNICATION_PERIOD == ENC_BEACON
     const char* communicationMode = "ENC_Beacon";
 #else
     #error "Unknown COMMUNICATION_PERIOD mode"
 #endif
 
-// Conditionally compile based on TOPOLOGY
+
 #if TOPOLOGY == Line
-    const char* topology = "Line";
+    constexpr const char* topology = "Line";
 #elif TOPOLOGY == Star
     const char* topology = "Star";
 #else
@@ -61,3 +71,6 @@ If time allows, we will consider an hybrid use case that will combine the two pr
 Trick: //TODO: use the math online tool that was free when in college to generate the coordinates of the nodes (they have to be in range)
 
 */  
+
+
+#endif // COMMON_HPP
