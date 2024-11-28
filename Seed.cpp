@@ -37,11 +37,11 @@
         std::pair<int, int> coordinates = std::make_pair(0, 0);
         auto firstNode = std::make_shared<C3_Node>(0, logger, coordinates,dispatchCv,dispatchCvMutex);
 
-        for (size_t i = 0; i < nbComWindows; i++)
+        for (size_t i = 0; i <common:: nbComWindows; i++)
         {   
-            firstNode->addActivation(baseTime+(i+1)*lengthSleepingWindow+i*lengthTransmissionWindow, WindowNodeState::CanTransmit); //the C3 is only transmitting in this mode
+            firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+i*common::lengthTransmissionWindow, WindowNodeState::CanTransmit); //the C3 is only transmitting in this mode
         
-            firstNode->addActivation(baseTime+(i+1)*lengthSleepingWindow+(i+1)*lengthTransmissionWindow, WindowNodeState::CanSleep);
+            firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+(i+1)*common::lengthTransmissionWindow, WindowNodeState::CanSleep);
         }
         
         listNode.push_back(firstNode);
@@ -51,11 +51,11 @@
             std::pair<int, int> coordinate = std::make_pair(800*i, 0);
             auto node = std::make_shared<C2_Node>(i, logger, coordinate,dispatchCv,dispatchCvMutex); // Create a smart pointer
 
-            for (size_t i = 0; i < nbComWindows; i++)
+            for (size_t i = 0; i < common::nbComWindows; i++)
             {   
-                node->addActivation(baseTime+(i+1)*lengthSleepingWindow+i*lengthTransmissionWindow, WindowNodeState::CanCommunicate); //the C3 is only transmitting in this mode
+                node->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+i*common::lengthTransmissionWindow, WindowNodeState::CanCommunicate); //the C3 is only transmitting in this mode
             
-                node->addActivation(baseTime+(i+1)*lengthSleepingWindow+(i+1)*lengthTransmissionWindow, WindowNodeState::CanSleep);
+                node->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+(i+1)*common::lengthTransmissionWindow, WindowNodeState::CanSleep);
             }
             listNode.push_back(node);
         }

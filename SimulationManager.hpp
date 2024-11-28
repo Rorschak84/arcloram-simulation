@@ -18,7 +18,6 @@ public:
 
     int getNbNodes() const { return nodes.size(); };
 
-    void testFunction();
     // Starts the inter-node message dispatch loop using event-based triggering
     void startTransmissionLoop();
     void stopTransmissionLoop();

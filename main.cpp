@@ -26,10 +26,10 @@ int main() {
      // Create a clock with a tick time of 5 milliseconds (it's actually a scheduler )
      //there is a tradeoff between the performance of the simulation and the representation of real signals that are in the order of milliseconds
      //TODO: make the tick interval configurable in common
-    Clock clock(logger,tickIntervalForClock_ms);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
+    Clock clock(logger,common::tickIntervalForClock_ms);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
     //convert base time to milliseconds
     int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() ;
-    baseTime+=baseTimeOffset; //allow the system to initialize before the TDMA begins
+    baseTime+=common::baseTimeOffset; //allow the system to initialize before the TDMA begins
 
     double distanceThreshold=1000;
     SimulationManager manager(distanceThreshold,logger);
@@ -39,7 +39,7 @@ int main() {
     
  
 
-    Seed seed(std::string(communicationMode), std::string(topology),logger,manager.dispatchCv,manager.dispatchCvMutex,baseTime);
+    Seed seed(std::string(common::communicationMode), std::string(common::topology),logger,manager.dispatchCv,manager.dispatchCvMutex,baseTime);
     
     auto nodes = seed.transferOwnership(); //the seed object memory is released safely
     manager.takeOwnership(std::move(nodes));

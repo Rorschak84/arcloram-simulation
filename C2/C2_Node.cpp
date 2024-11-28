@@ -51,15 +51,15 @@
     {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(minimumNbBeaconPackets, maximumNbBeaconPackets);
+        std::uniform_int_distribution<> dis(common::minimumNbBeaconPackets,common::maximumNbBeaconPackets);
         return dis(gen);
     }
 
     std::vector<int> C2_Node::selectRandomSlots(int m)
     {
         // Step 1: Create a vector of slots [0, 1, ..., n-1]
-        std::vector<int> slots(nbSlotsPossibleForOneBeacon);
-        for (int i = 0; i < nbSlotsPossibleForOneBeacon; ++i) {
+        std::vector<int> slots(common::nbSlotsPossibleForOneBeacon);
+        for (int i = 0; i < common::nbSlotsPossibleForOneBeacon; ++i) {
             slots[i] = i;
         }
 
@@ -100,8 +100,8 @@
                 isTransmittingWhileCommunicating=true;
                 //send the beacon
                 std::vector<uint8_t> beaconPacket = {0x01, 0x02, 0x03, 0x04};
-                std::this_thread::sleep_for(std::chrono::milliseconds(guardTime));
-                addMessageToTransmit(beaconPacket,std::chrono::milliseconds(timeOnAirBeacon));
+                std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime));
+                addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirBeacon));
                 beaconSlots.erase(beaconSlots.begin());
             }
             //decrease every elements of the slots by one

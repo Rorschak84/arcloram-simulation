@@ -1,6 +1,15 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+#include <unordered_map>
+#include <string>
+
+
+ namespace common{
+
+
+
+
 /*
 *  Define General Parameters for the Simulation 
 *   Define the Topology Desired and the Communication Period Mode in the two preprocessor Macros
@@ -73,6 +82,28 @@ constexpr const double distanceThreshold=1000;
     constexpr  const  unsigned int nbComWindows =40;
 
 
+
+
+    //For the Packet
+    // Define field positions and sizes in the packet
+
+    //TODO:
+    //Put every variables (index + nbBytes) of the fields as consexpr
+    //they are used in some function
+
+
+    // Format: { "field_name", {start_index, size_in_bytes} }
+    inline const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap = {
+            {"type", {0, 1}},             // "type" starts at index 0, 1 byte long
+            {"timeStamp", {1, 4}},       // "timeStamp" starts at index 1, 4 bytes long
+            {"costFunction", {5, 1}},    // "costFunction" starts at index 5, 1 byte long
+            {"hopCount", {6, 2}},        // "hopCount" starts at index 6, 2 bytes long
+            {"globalIDPacket", {8, 2}},  // "globalIDPacket" starts at index 8, 2 bytes long
+            {"senderGlobalId", {10, 2}}, // "senderGlobalId" starts at index 10, 2 bytes long
+            {"hashFunction", {12, 4}}    // "hashFunction" starts at index 12, 4 bytes long
+        };
+
+
 #elif COMMUNICATION_PERIOD == ENC_BEACON
     const char* communicationMode = "ENC_Beacon";
 #else
@@ -89,5 +120,5 @@ constexpr const double distanceThreshold=1000;
 #endif
 
 
-
+ }
 #endif // COMMON_HPP
