@@ -49,6 +49,7 @@ public:
     
     void stop();
      
+
     virtual std::string initMessage() const;//default message to be logged when the node starts
 
     //used by simulation manager
@@ -76,7 +77,7 @@ public:
     }
 
      void onTimeChange(WindowNodeState proposedState);
-     
+
 protected:
 
     //variables
@@ -90,8 +91,17 @@ protected:
     std::queue<std::pair<std::vector<uint8_t>,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
  
     //to simulate interferences:
+    //old
     std::atomic<std::chrono::steady_clock::time_point> timeOnAirEnd; // End of current Time On Air
     std::atomic<bool> stopReceiving{false};           // Signals the active thread to stop
+    //new
+    std::atomic<bool> isReceiving=false;
+    std::atomic<bool>  hadInterference=false;
+     // Define a time_point with millisecond precision
+    std::atomic<std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>>endReceivingTimePoint;
+    std::mutex interferenceMutex;
+    std::condition_variable interferenceCv;
+
 
     // Mutexes to protect the buffers
     std::mutex receiveMutex;

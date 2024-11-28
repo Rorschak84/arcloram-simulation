@@ -13,14 +13,19 @@ void Clock::start(){
         logger.logMessage(startingLog);
         
         clockThread= std::thread([this]() {
-            auto nextTick = std::chrono::steady_clock::now();
+            auto nextTick = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+
+            // Log printNextTick("nextTIckeValue:"+std::to_string (nextTick.time_since_epoch().count()),true);
+            // logger.logMessage(printNextTick);
+
             while (running) {
                 
                 
                 nextTick += tickInterval;
-
+            //   Log printNextTick2("nextTIckeValue:"+std::to_string( nextTick.time_since_epoch().count()),true);
+            //   logger.logMessage(printNextTick2);
                 tick();
-                if(nextTick<std::chrono::steady_clock::now()){
+                if(nextTick<std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())){
                     throw std::runtime_error("Missed tick-Unpredictable Behaviour: PLease Increase Tick Interval ");
                     //when this happens, increase the tick interval
                     // Log missedTick("Missed tick", true);
@@ -101,7 +106,7 @@ void Clock::scheduleCallback(int64_t activationTime, CallbackType callback){
     }
 
 int64_t Clock::currentTimeInMilliseconds(){
-        //returns the time that passed since the "epoch" in ms
-        auto now = std::chrono::steady_clock::now().time_since_epoch();
+        //returns the time that passed since the "epoch" (1st January 1970) in ms
+        auto now = std::chrono::system_clock::now().time_since_epoch();
         return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
     }

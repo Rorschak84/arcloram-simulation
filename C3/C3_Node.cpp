@@ -73,8 +73,8 @@ std::string C3_Node::initMessage() const{
 
     bool C3_Node::canSleepFromTransmitting() { 
         currentState=NodeState::Sleeping;
-        Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
-        logger.logMessage(transitionLog);  
+        // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
+        // logger.logMessage(transitionLog);  
         return true; 
         }
 

@@ -74,14 +74,19 @@
                 // Flush buffer if it reaches the limit
                 if (terminalBuffer.size() >= maxTerminalBufferSize) {
                     for (const auto& msg : terminalBuffer) {
-                        std::cout << msg << std::endl;
+                        std::cout << msg << "\n"; //"\n" and endl is not the same !
                     }
+                    std::cout<<std::flush;
                     terminalBuffer.clear(); // Clear the buffer after writing
                 }
             }
 
 
             if (stopFlag) {
+                for (const auto& msg : terminalBuffer) {
+                    std::cout << msg << "\n"; //"\n" and endl is not the same !
+                }
+                std::cout<<std::flush;               
                 flushBuffer(logFile, textBuffer); // Flush remaining messages
                 break; // Exit the loop
             }

@@ -6,6 +6,10 @@ Node::Node(int id, Logger& logger, std::pair<int,int> coordinates, std::conditio
     : nodeId(id), running(true),logger(logger), coordinates(coordinates), dispatchCv(dispatchCv), dispatchCvMutex(dispatchCvMutex) {
     // Constructor implementation
     timeOnAirEnd={std::chrono::steady_clock::now()};//for interference, this is the new reference point
+   
+   
+   // endReceivingTimePoint={std::chrono::system_clock::now()};
+
 }
 
 
@@ -34,7 +38,7 @@ void Node::stop() {
 void Node::initializeTransitionMap(){
     // Safe to assign the C1/2/3 class's callBack function after construction
     //this function will be called in the constructor of the Child classes ! (C1, C2, C3), otherwise virtual func implementation cannot be solved
-    // Define state transition rules: Proposed state -> Current state -> Condition check function
+    // state transition name convention: Proposed state -> Current state -> Condition check function
 
 
         stateTransitions[{WindowNodeState::CanTransmit, NodeState::Listening}] = [this]() { return canTransmitFromListening(); };
@@ -139,73 +143,115 @@ std::string Node::stateToString(WindowNodeState state) {
     }
 }
 
+
+
+
 //simulate the reception of a message, including potential interferences
 void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) {
 
-
-
-
-        auto now = std::chrono::steady_clock::now();
-        auto newEndTime = now + timeOnAir;
-        // Check for interference
-        if (now < timeOnAirEnd.load()) {
-
-            // Interference detected
-            Log interferenceLog("Node: "+std::to_string(nodeId)+ "receives simultaneous Msg! Dropping message: "+packet_to_binary(message), true);
-            logger.logMessage(interferenceLog);
-           
-
-            // Signal the worker thread to stop
-            stopReceiving = true;
-
-            // Extend the Time On Air window to the furthest point in time (the sender keeps sending the message regardless of the interference detected at the receiver side !)
-            timeOnAirEnd.store(std::max(timeOnAirEnd.load(), newEndTime));
+        if(isReceiving){
+            //two simultaneous messages are received -> interference
+            hadInterference=true;
+            Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
+            logger.logMessage(abortLog);
+            endReceivingTimePoint = std::max(endReceivingTimePoint.load(), std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()) +timeOnAir);
+            interferenceCv.notify_one();//notify the thread that simulate the reception of the first message to change the time until it should wait
             return;
         }
-        // No interference: Update the Time On Air end time
-        timeOnAirEnd.store(newEndTime);
-        stopReceiving = false; // Reset stop signal for the new reception
+        else{ //no interference
+            isReceiving=true;
+            endReceivingTimePoint= std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+            endReceivingTimePoint=endReceivingTimePoint.load()+timeOnAir;
 
-        // Start a worker thread for Time On Air simulation in detached mode
-        std::thread([this, message, timeOnAir]() {
-            auto start = std::chrono::steady_clock::now();
-            auto end = start + timeOnAir;
-
-            // Simulate Time On Air with a loop
-            while (std::chrono::steady_clock::now() < end) {
-                if (stopReceiving) {
-                    // Interruption detected: Stop processing this message
-                     Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "+packet_to_binary(message)+" due to interference", true);
+            //launch a thread in detach mode that simulates the reception of the message. Any additional message received during a period of TimeOnAir ms will result in droping of the msg
+            std::thread([this, message]() {
+                std::unique_lock<std::mutex> lock(interferenceMutex);
+                while( std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())< endReceivingTimePoint.load()){
+                    interferenceCv.wait_until(lock, endReceivingTimePoint.load());
+                }
+                if(hadInterference){
+                    Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "+packet_to_binary(message)+" due to interference", true);
                     logger.logMessage(abortLog);
-                    stopReceiving = false; // Reset the stop signal
+                    hadInterference=false;//we drop the initial message
+                    isReceiving=false;
                     return;
                 }
-                //TODO: declare a global variable that will manage this ticks intervals!
-                std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Avoid busy-waiting
-            }
+                else{
+                    std::lock_guard<std::mutex> lock(receiveMutex);
+                    receiveBuffer.push(message); 
+                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
+                    logger.logMessage(receivedLog); 
+                    isReceiving=false;
+                }
 
-            //sometimes the thread scheduler makes the worker thread "misses" the condition on the time on ai
-            //so we need to check if the stop signal is set
-            if (stopReceiving) {
-                    // Interruption detected: Stop processing this message
-                     Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
-                    logger.logMessage(abortLog);
-                    stopReceiving = false; // Reset the stop signal
-                    return;
-            }
+            }).detach();
+        }
 
 
-            // If no interference occurred, the message is successfully received
-            {
-                std::lock_guard<std::mutex> lock(receiveMutex);
-                //should be replaced by stack.
-                receiveBuffer.push(message); 
-            }
 
-            //this log will be printed in the receive func of the child class, containing additionnal behaviour    
-            //  Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
-            //  logger.logMessage(receivedLog); 
-        }).detach(); // Detach the thread so it runs independently
+
+
+
+
+        // auto now = std::chrono::steady_clock::now();
+        // auto newEndTime = now + timeOnAir;
+        // // Check for interference
+        // if (now < timeOnAirEnd.load()) {
+
+
+           
+
+        //     // Signal the worker thread to stop
+        //     stopReceiving = true;
+
+        //     // Extend the Time On Air window to the furthest point in time (the sender keeps sending the message regardless of the interference detected at the receiver side !)
+        //     timeOnAirEnd.store(std::max(timeOnAirEnd.load(), newEndTime));
+        //     return;
+        // }
+        // // No interference: Update the Time On Air end time
+        // timeOnAirEnd.store(newEndTime);
+        // stopReceiving = false; // Reset stop signal for the new reception
+
+        // // Start a worker thread for Time On Air simulation in detached mode
+        // std::thread([this, message, timeOnAir]() {
+        //     auto start = std::chrono::steady_clock::now();
+        //     auto end = start + timeOnAir;
+
+        //     // Simulate Time On Air with a loop
+        //     while (std::chrono::steady_clock::now() < end) {
+        //         if (stopReceiving) {
+        //             // Interruption detected: Stop processing this message
+        //              Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "+packet_to_binary(message)+" due to interference", true);
+        //             logger.logMessage(abortLog);
+        //             stopReceiving = false; // Reset the stop signal
+        //             return;
+        //         }
+        //         //TODO: declare a global variable that will manage this ticks intervals!
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Avoid busy-waiting
+        //     }
+
+        //     //sometimes the thread scheduler makes the worker thread "misses" the condition on the time on ai
+        //     //so we need to check if the stop signal is set
+        //     if (stopReceiving) {
+        //             // Interruption detected: Stop processing this message
+        //              Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
+        //             logger.logMessage(abortLog);
+        //             stopReceiving = false; // Reset the stop signal
+        //             return;
+        //     }
+
+
+        //     // If no interference occurred, the message is successfully received
+        //     {
+        //         std::lock_guard<std::mutex> lock(receiveMutex);
+        //         //should be replaced by stack.
+        //         receiveBuffer.push(message); 
+        //     }
+
+        //     //this log will be printed in the receive func of the child class, containing additionnal behaviour    
+        //     //  Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
+        //     //  logger.logMessage(receivedLog); 
+        // }).detach(); // Detach the thread so it runs independently
   
 }
 

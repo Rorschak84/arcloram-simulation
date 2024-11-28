@@ -42,8 +42,8 @@
 
         shouldSendBeacon=true;
 
-        Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
-        logger.logMessage(receivedLog);
+        // Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
+        // logger.logMessage(receivedLog);
     
     }
 
@@ -80,8 +80,8 @@
     bool C2_Node::canSleepFromCommunicating()
     {   //Node Can alwasy sleep
         currentState=NodeState::Sleeping;
-        Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
-        logger.logMessage(transitionLog);   
+        // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
+        // logger.logMessage(transitionLog);   
         return true;
     }
 

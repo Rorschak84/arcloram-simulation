@@ -28,7 +28,7 @@ int main() {
      //TODO: make the tick interval configurable in common
     Clock clock(logger,tickIntervalForClock_ms);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
     //convert base time to milliseconds
-    int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() ;
+    int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() ;
     baseTime+=baseTimeOffset; //allow the system to initialize before the TDMA begins
 
     double distanceThreshold=1000;
