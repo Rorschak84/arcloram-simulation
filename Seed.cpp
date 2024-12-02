@@ -21,6 +21,9 @@
         if(use_case=="RRC_Beacon_Line"){
             initialize_RRC_Beacon_Line();
         }
+        else if (use_case=="RRC_Beacon_Mesh"){
+            initialize_RRC_Beacon_Mesh();
+        }
 
         //for other uses cases, you will probably have to create additional constructors for C3, C2.. to provision the element 
 
@@ -28,10 +31,55 @@
             throw std::invalid_argument("The use case is not implemented");
         }
     }
+    void Seed::initialize_RRC_Beacon_Mesh(){
+        /*                 -- C2--
+                       ---        ---
+                 ---C2-----------------C2
+                ---        ---      ---
+            C3                --C2-- 
+              ---          ---     --       
+                 ---C2---            --C2
+        */
+
+        //create a C3 node
+        std::pair<int, int> coordinates = std::make_pair(0, 0);
+        auto firstNode = std::make_shared<C3_Node>(0, logger, coordinates,dispatchCv,dispatchCvMutex);
+
+        for (size_t i = 0; i <common:: nbComWindows; i++)
+        {   
+            firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+i*common::lengthTransmissionWindow, WindowNodeState::CanTransmit); //the C3 is only transmitting in this mode
+        
+            firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+(i+1)*common::lengthTransmissionWindow, WindowNodeState::CanSleep);
+        }
+
+            // Create C2 nodes in a mesh configuration
+        int nbC2Nodes=6;
+        std::vector<std::pair<int, int>> coordinatesC2 = {std::make_pair(600, 600), std::make_pair(600, -600), std::make_pair(1200, 0),
+        std::make_pair(1200, 1800), std::make_pair(1800, 600), std::make_pair(1800, -600)};
+
+        for( int i = 1; i<nbC2Nodes; i++){
+            
+            auto node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i],dispatchCv,dispatchCvMutex); // Create a smart pointer
+
+            for (size_t i = 0; i < common::nbComWindows; i++)
+            {   
+                node->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+i*common::lengthTransmissionWindow, WindowNodeState::CanCommunicate); //the C3 is only transmitting in this mode
+            
+                node->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+(i+1)*common::lengthTransmissionWindow, WindowNodeState::CanSleep);
+            }
+            listNode.push_back(node);
+        }     
+
+    }
+
 
     void Seed::initialize_RRC_Beacon_Line(){
        
+        /*
+        
+            C3 --------  C2 -------- C2 -------- C2 -------- C2
 
+        */
 
         //create a C3 node
         std::pair<int, int> coordinates = std::make_pair(0, 0);

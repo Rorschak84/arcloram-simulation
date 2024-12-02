@@ -27,26 +27,85 @@
     void C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
     {
         if(!canNodeReceiveMessage()){
-            Log interferenceLog("Node "+std::to_string(nodeId)+" is not listening, message "+packet_to_binary(message)+" is lost", true);
-            logger.logMessage(interferenceLog);
+             Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped "+detailedBytesToString( message), true);
+             logger.logMessage(notlisteninglog);
             return;
         }
 
-
         Node::receiveMessage(message, timeOnAir);//for the interference model
-        //there is one message in the receiveBuffer now
-
-        std::lock_guard<std::mutex> lock(receiveMutex);
-
-        //TODO: add logic to see if the new packet is worth to be processed
+        //there is one message in the receiveBuffer no
+        uint8_t type=extractBytesFromField(message,"type");
+        if(type!=common::type[0]){
+            //not a beacon, we don't care
+            Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
+            logger.logMessage(wrongTypeLog);
+            receiveBuffer.pop();
+            return;
+        }
 
         shouldSendBeacon=true;
 
-        // Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
-        // logger.logMessage(receivedLog);
-    
-    }
+        uint8_t packetHopCount=extractBytesFromField(message,"hopCount");
+        uint32_t packetTimeStamp=extractBytesFromField(message,"timeStamp");
+        uint16_t packetGlobalIDPacket=extractBytesFromField(message,"globalIDPacket");
+        uint8_t packetPathCost=extractBytesFromField(message,"costFunction");
+        uint16_t packetNextNodeIdInPath=extractBytesFromField(message,"senderGlobalId");
 
+        // //TODO: remove the buffer?? maybe it's just used by the simulation manager
+        // receiveBuffer.pop();//we don't care about the other messages
+        // //actually, we don't really care about the receiving buffer, since each message is treated as soon as it is received.
+
+        std::lock_guard<std::mutex> lock(receiveMutex);
+        if(!hopCount.has_value()){
+            //this is the first beacon received
+            shouldSendBeacon=true; //next tranmission slots, will create the new sending beacon scheduler
+            hopCount=packetHopCount+1;
+            lastTimeStampReceived=packetTimeStamp;
+            globalIDPacketList.push_back(packetGlobalIDPacket);
+            pathCost=packetPathCost+5; //should take into account the battery TODO
+            nextNodeIdInPath=packetNextNodeIdInPath;
+        }
+        else{ 
+            if(nextNodeIdInPath==packetNextNodeIdInPath){
+                //we received a Beacon from the optimized path, but we need to check if the associated cost changed
+                if(pathCost<packetPathCost){
+                    //the cost has changed
+                    pathCost=packetPathCost+5;
+                    hopCount=packetHopCount+1;//it can happen that the next Optimal Node in the path found a new optimal path itself, thus changing the hop count
+                }
+            }
+            else{
+            //check if the registerd path is still the least costly, otherwise update the path
+                if(pathCost>packetPathCost){
+                     //the optimized path has changed - the path is independent from the fact we resend beacon
+                    pathCost=packetPathCost+5;
+                    hopCount=packetHopCount+1;
+                    nextNodeIdInPath=  packetNextNodeIdInPath;     
+                }
+            }
+
+   
+            //TODO: put the +4 in common
+            if (hopCount.value() +4>packetHopCount){
+                // the timestamp received can be included in the synchronization clock mechanism as it has a similar relative accuracy
+                
+                lastTimeStampReceived=packetTimeStamp;//there should be a function to actualize the internal clock here
+
+                if(std::find(globalIDPacketList.begin(), globalIDPacketList.end(), packetGlobalIDPacket) != globalIDPacketList.end()){
+                    //we already received this beacon, no retransmission
+                    return;
+                }else{
+                    //it's a new beacon, we reenter boradcast mode regardless of the beacons left to send
+                    globalIDPacketList.push_back(packetGlobalIDPacket);
+                    shouldSendBeacon=true;//at next transmission slots, will create the new sending beacon scheduler
+                    beaconSlots.clear();
+                }
+            }                               
+        }
+    }
+    
+
+    // TODO: put them in the common
     int C2_Node::computeRandomNbBeaconPackets()
     {
         std::random_device rd;
@@ -98,9 +157,32 @@
             //we have beacons to send 
             if(beaconSlots[0]==0){
                 isTransmittingWhileCommunicating=true;
-                //send the beacon
-                std::vector<uint8_t> beaconPacket = {0x01, 0x02, 0x03, 0x04};
                 std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime));
+
+                //create the beacon packet
+                std::vector<uint8_t> beaconPacket;
+                //preallocate the space for optimization
+                beaconPacket.reserve(common::typeBytesSize + common::timeStampBytesSize + common::costFunctionBytesSize +
+                                common::hopCountBytesSize + common::globalIDPacketBytesSize +
+                                common::senderGlobalIdBytesSize + common::hashFunctionBytesSize);
+                
+                //prepare the fields
+                std::vector<uint8_t> newTimeStamp = getTimeStamp(); 
+                std::vector<uint8_t> newCostFunction = {pathCost.value()};
+                std::vector<uint8_t> newHopCount = decimalToBytes(hopCount.value(), common::hopCountBytesSize);
+                std::vector<uint8_t> newGlobalIDPacket = decimalToBytes( globalIDPacketList.back(), common::globalIDPacketBytesSize);
+                std::vector<uint8_t> newSenderGlobalId = decimalToBytes(nodeId, common::senderGlobalIdBytesSize);
+                std::vector<uint8_t> newHashFunction = {0x00,0x00,0x00,0x00}; 
+
+                // Append all fields
+                appendVector(beaconPacket, common::type);
+                appendVector(beaconPacket, newTimeStamp);
+                appendVector(beaconPacket, newCostFunction);
+                appendVector(beaconPacket, newHopCount);
+                appendVector(beaconPacket, newGlobalIDPacket);
+                appendVector(beaconPacket, newSenderGlobalId);
+                appendVector(beaconPacket, newHashFunction);
+
                 addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirBeacon));
                 beaconSlots.erase(beaconSlots.begin());
             }

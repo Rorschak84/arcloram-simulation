@@ -53,9 +53,9 @@ If time allows, we will consider an hybrid use case that will combine the two pr
 
 
 //-----------------------------------------GENERAL PARAMETERS-----------------------------------------
-constexpr const int tickIntervalForClock_ms=100; // The tick interval should be at most equal to the minimum duration of all the windows, divided by 4/5, otherwise unpredictable behavior may occur
-constexpr const int baseTimeOffset=1000;
-constexpr const double distanceThreshold=1000;
+constexpr const int tickIntervalForClock_ms=150; // The tick interval should be at most equal to the minimum duration of all the windows, divided by 4/5, otherwise unpredictable behavior may occur
+constexpr const int baseTimeOffset=1000; //the base time offset allows the system to initialize before the TDMA begins
+constexpr const double distanceThreshold=1000; //the distance threshold for the PHY layer
 
 
 
@@ -87,21 +87,31 @@ constexpr const double distanceThreshold=1000;
     //For the Packet
     // Define field positions and sizes in the packet
 
-    //TODO:
+    //TODO: change the index so it's a variable in the map
     //Put every variables (index + nbBytes) of the fields as consexpr
     //they are used in some function
-
+    constexpr const int typeBytesSize=1;
+    constexpr const int timeStampBytesSize=4;
+    constexpr const int costFunctionBytesSize=1;
+    constexpr const int hopCountBytesSize=2;
+    constexpr const int globalIDPacketBytesSize=2;
+    constexpr const int senderGlobalIdBytesSize=2;
+    constexpr const int hashFunctionBytesSize=4;
+    constexpr const int totalBytesSize=16;
 
     // Format: { "field_name", {start_index, size_in_bytes} }
     inline const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap = {
-            {"type", {0, 1}},             // "type" starts at index 0, 1 byte long
-            {"timeStamp", {1, 4}},       // "timeStamp" starts at index 1, 4 bytes long
-            {"costFunction", {5, 1}},    // "costFunction" starts at index 5, 1 byte long
-            {"hopCount", {6, 2}},        // "hopCount" starts at index 6, 2 bytes long
-            {"globalIDPacket", {8, 2}},  // "globalIDPacket" starts at index 8, 2 bytes long
-            {"senderGlobalId", {10, 2}}, // "senderGlobalId" starts at index 10, 2 bytes long
-            {"hashFunction", {12, 4}}    // "hashFunction" starts at index 12, 4 bytes long
+            {"type", {0, typeBytesSize}},             // "type" starts at index 0, 1 byte long
+            {"timeStamp", {1, timeStampBytesSize}},       // "timeStamp" starts at index 1, 4 bytes long
+            {"costFunction", {5, costFunctionBytesSize}},    // "costFunction" starts at index 5, 1 byte long
+            {"hopCount", {6, hopCountBytesSize}},        // "hopCount" starts at index 6, 2 bytes long
+            {"globalIDPacket", {8, globalIDPacketBytesSize}},  // "globalIDPacket" starts at index 8, 2 bytes long
+            {"senderGlobalId", {10, senderGlobalIdBytesSize}}, // "senderGlobalId" starts at index 10, 2 bytes long
+            {"hashFunction", {12, hashFunctionBytesSize}},    // "hashFunction" starts at index 12, 4 bytes long
         };
+
+    //static fields for this mode
+    inline  const std::vector<uint8_t> type = {0x01}; // Type is 1 byte long in the simulation, 3 bits in real life
 
 
 #elif COMMUNICATION_PERIOD == ENC_BEACON

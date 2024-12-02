@@ -10,8 +10,15 @@ std::string C3_Node::initMessage() const{
 }
 
 
+
 #if COMMUNICATION_PERIOD == RRC_BEACON
 
+
+    void C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir){
+            Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg "/*+detailedBytesToString( message)*/, true);
+             logger.logMessage(notlisteninglog);
+            return;
+    }
     //-----------------------utilities------------------
     int C3_Node::computeRandomNbBeaconPackets() {
         std::random_device rd;
@@ -57,14 +64,54 @@ std::string C3_Node::initMessage() const{
         }
 
         if(beaconSlots[0]==0){
-            //send the beacon
-            std::vector<uint8_t> beaconPacket = {0x01, 0x02, 0x03, 0x04};
+
+
             std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime)); 
+
+
+
+            //-------------------------------------define Beacon Packet----------------------------
+            //----------least signficant byte first (little endian) !------------
+                      
+            std::vector<uint8_t> timeStamp = getTimeStamp(); //look how to provision it Timestamp is 4 bytes long in the simulation AND real life
+            std::vector<uint8_t> costFunction = {0x00}; //Cost Function is 1 byte long in the simulation, 12 bits in real life
+            std::vector<uint8_t> hopCount = {0x00,0x00}; //Hop Count is 2 byte long in the simulation, 10 bits in real life
+
+            std::vector<uint8_t> globalIDPacket= {0x01,0x00 }; //Global ID is 2 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> senderGlobalId = decimalToBytes(nodeId,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+            //dummy hash: we don't implement the hash function in this simulation
+            std::vector<uint8_t> hashFunction = {0x00,0x00,0x00,0x00}; //Hash Function is 4 byte long in the simulation AND in real life
+
+
+
+            // Concatenate fields into one vector
+            std::vector<uint8_t> beaconPacket;
+
+            //preallocate the space for optimization
+            //TODO: should use the size in the common file, not the variable, source of error
+            beaconPacket.reserve(common::type.size() + timeStamp.size() + costFunction.size() +
+                            hopCount.size() + globalIDPacket.size() +
+                            senderGlobalId.size() + hashFunction.size());
+
+            // Append all fields
+            appendVector(beaconPacket, common::type);
+            appendVector(beaconPacket, timeStamp);
+            appendVector(beaconPacket, costFunction);
+            appendVector(beaconPacket, hopCount);
+            appendVector(beaconPacket, globalIDPacket);
+            appendVector(beaconPacket, senderGlobalId);
+            appendVector(beaconPacket, hashFunction);
+
+
+
             addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirBeacon));
             //erase the first element of the list
             beaconSlots.erase(beaconSlots.begin());
         }
         //decrease every elements of the slots by one
+        if(beaconSlots.size()==0){
+            return true;
+        }
         for(int i=0;i<beaconSlots.size();i++){
             beaconSlots[i]--;
         }

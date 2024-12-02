@@ -47,9 +47,16 @@ public :
     #if COMMUNICATION_PERIOD == RRC_BEACON
 
         bool shouldSendBeacon=false;
-        short hopCount=-1;
-        std::vector<int> beaconSlots;
-         
+        std::optional<uint8_t> hopCount;
+        std::optional<uint32_t> lastTimeStampReceived;
+        double battery= 80.0; //in percentage
+        std::vector<int> beaconSlots; 
+        std::vector<uint16_t> globalIDPacketList;//
+        std::optional<uint8_t> pathCost;
+        std::optional<uint16_t> nextNodeIdInPath;
+
+
+        //TODO: put these two functions in a common file, same for C3 (use inline) 
         int computeRandomNbBeaconPackets();
         //selecte m slots randomly in the n slots, and return an orderred list of the selected slots
         std::vector<int> selectRandomSlots(int m);

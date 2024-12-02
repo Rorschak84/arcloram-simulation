@@ -152,7 +152,7 @@ void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
         if(isReceiving){
             //two simultaneous messages are received -> interference
             hadInterference=true;
-            Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "+packet_to_binary(message)+" due to interference", true);
+            Log abortLog("Node "+std::to_string(nodeId)+"aborts Msg reception: "/*+packet_to_binary(message)*/+" due to interference", true);
             logger.logMessage(abortLog);
             endReceivingTimePoint = std::max(endReceivingTimePoint.load(), std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()) +timeOnAir);
             interferenceCv.notify_one();//notify the thread that simulate the reception of the first message to change the time until it should wait
@@ -170,7 +170,7 @@ void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
                     interferenceCv.wait_until(lock, endReceivingTimePoint.load());
                 }
                 if(hadInterference){
-                    Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "+packet_to_binary(message)+" due to interference", true);
+                    Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "/*+detailedBytesToString(message)*/+" due to interference", true);
                     logger.logMessage(abortLog);
                     hadInterference=false;//we drop the initial message
                     isReceiving=false;
@@ -179,7 +179,7 @@ void Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
                 else{
                     std::lock_guard<std::mutex> lock(receiveMutex);
                     receiveBuffer.push(message); 
-                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+packet_to_binary(message), true);
+                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message), true);
                     logger.logMessage(receivedLog); 
                     isReceiving=false;
                 }
@@ -274,7 +274,7 @@ void Node::addMessageToTransmit(const std::vector<uint8_t> message,std::chrono::
     }
 
     {
-  Log queuedLog("Node "+std::to_string(nodeId)+" queued "+packet_to_binary( message)+" TOA:"+std::to_string(timeOnAir.count()), true);
+  Log queuedLog("Node "+std::to_string(nodeId)+" queued "+detailedBytesToString( message), true);
   logger.logMessage(queuedLog);
    //std::lock_guard<std::mutex> lockNode(dispatchCvMutex); // Lock the shared mutex for condition variable signaling
     // Notify that a new message is ready

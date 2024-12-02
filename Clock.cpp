@@ -26,7 +26,7 @@ void Clock::start(){
             //   logger.logMessage(printNextTick2);
                 tick();
                 if(nextTick<std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())){
-                    throw std::runtime_error("Missed tick-Unpredictable Behaviour: PLease Increase Tick Interval ");
+                   // throw std::runtime_error("Missed tick-Unpredictable Behaviour: PLease Increase Tick Interval ");
                     //when this happens, increase the tick interval
                     // Log missedTick("Missed tick", true);
                     // logger.logMessage(missedTick);

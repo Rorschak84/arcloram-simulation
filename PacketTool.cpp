@@ -3,6 +3,7 @@
 #include <iomanip>
 #include "Common.hpp"
 #include <unordered_map>
+#include <chrono>
 #include <algorithm>
 
 
@@ -50,6 +51,40 @@
 //-----------------------------------------------END--------------------------------------
 
 
+
+std::vector<uint8_t> getTimeStamp() {
+    // Get the current time since epoch in milliseconds
+    uint64_t ms_since_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                  std::chrono::system_clock::now().time_since_epoch())
+                                  .count();
+
+    // Extract the last 4 bytes of the timestamp
+    uint32_t last_4_bytes = static_cast<uint32_t>(ms_since_epoch & 0xFFFFFFFF);
+
+    // Convert to vector<uint8_t>
+    std::vector<uint8_t> timeStamp(4);
+    timeStamp[0] = (last_4_bytes >> 24) & 0xFF; // Most significant byte
+    timeStamp[1] = (last_4_bytes >> 16) & 0xFF;
+    timeStamp[2] = (last_4_bytes >> 8) & 0xFF;
+    timeStamp[3] = last_4_bytes & 0xFF;         // Least significant byte
+
+    return timeStamp;
+}
+
+std::string bytesToBinaryString(const std::vector<uint8_t>& packet) {
+    std::ostringstream oss;
+    for (auto byte : packet) {
+        // Convert each byte to its binary representation
+        for (int i = 7; i >= 0; --i) {
+            oss << ((byte >> i) & 1);
+        }
+        oss << " "; // Space between bytes
+    }
+    return oss.str();
+}
+
+
+
 // Function to extract a field's value
 //IF we need to process the Payload with this, since it can be 40 bytes maximum, we need to use a uint64_t (or maybe higher?)
 //unless we don't want to print the payload
@@ -80,7 +115,7 @@ uint32_t extractBytesFromField(const std::vector<uint8_t>& packet, const std::st
 }
 
 // Function to convert a packet of bytes to a space-separated decimal string
-inline std::string bytesToDecimal(const std::vector<uint8_t>& packet) {
+std::string bytesToDecimal(const std::vector<uint8_t>& packet) {
     std::ostringstream oss;
     for (auto byte : packet) {
         oss << static_cast<int>(byte) << " "; // Convert each byte to decimal
@@ -93,12 +128,12 @@ inline std::string bytesToDecimal(const std::vector<uint8_t>& packet) {
 }
 
 // Function to convert a decimal value into a std::vector<uint8_t>
-inline std::vector<uint8_t> decimalToBytes(uint32_t decimalValue, size_t byteCount) {
+std::vector<uint8_t> decimalToBytes(uint32_t decimalValue, size_t byteCount) {
     std::vector<uint8_t> bytes(byteCount, 0);
 
     for (size_t i = 0; i < byteCount; ++i) {
         // Extract the least significant byte and store it in reverse order
-        bytes[byteCount - 1 - i] = static_cast<uint8_t>(decimalValue & 0xFF);
+         bytes[i] = static_cast<uint8_t>(decimalValue & 0xFF); //LITTLE ENDIAN, if you want BIG ENDIAN, change i by byteCount -1 -i
         decimalValue >>= 8; // Shift the value to process the next byte
     }
 
@@ -132,17 +167,6 @@ std::string detailedBytesToString(const std::vector<uint8_t>& packet) {
     return result;
 }
 
-std::string packet_to_binary(const std::vector<uint8_t>& packet) {
-    std::ostringstream oss;
-    for (auto byte : packet) {
-        // Convert each byte to its binary representation
-        for (int i = 7; i >= 0; --i) {
-            oss << ((byte >> i) & 1);
-        }
-        oss << " "; // Space between bytes
-    }
-    return oss.str();
-}
 
 std::string packet_to_hex(const std::vector<uint8_t>& packet) {
     std::ostringstream oss;
@@ -152,12 +176,6 @@ std::string packet_to_hex(const std::vector<uint8_t>& packet) {
     }
     return oss.str();
 }
-
-
-
-
-
-
 
 //not used, we only care of bytes
 void add_bit_to_packet(std::vector<uint8_t>& packet, bool bit) {

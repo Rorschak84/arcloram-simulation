@@ -17,6 +17,8 @@ public :
     }
     std::string initMessage() const override;
 
+    void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
+
 
 
 
@@ -32,7 +34,7 @@ protected:
 
 
 
-
+    //TODO: put them in common 
     int computeRandomNbBeaconPackets();
 
     //selecte m slots randomly in the n slots, and return an orderred list of the selected slots
