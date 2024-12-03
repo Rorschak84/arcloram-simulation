@@ -27,13 +27,26 @@
     void C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
     {
         if(!canNodeReceiveMessage()){
-             Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped "+detailedBytesToString( message), true);
+             Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
              logger.logMessage(notlisteninglog);
             return;
         }
 
         Node::receiveMessage(message, timeOnAir);//for the interference model
-        //there is one message in the receiveBuffer no
+
+        //there is one message in the receiveBuffer if no interference
+        {
+            std::lock_guard<std::mutex> lock(receiveMutex);
+            if(!getNextReceivedMessage().has_value()){
+                return; //interference
+            }
+            
+            receiveBuffer.pop();//the buffer is supposed to hold only one message at a time
+
+        }
+
+
+
         uint8_t type=extractBytesFromField(message,"type");
         if(type!=common::type[0]){
             //not a beacon, we don't care
@@ -43,7 +56,6 @@
             return;
         }
 
-        shouldSendBeacon=true;
 
         uint8_t packetHopCount=extractBytesFromField(message,"hopCount");
         uint32_t packetTimeStamp=extractBytesFromField(message,"timeStamp");
@@ -92,7 +104,8 @@
                 lastTimeStampReceived=packetTimeStamp;//there should be a function to actualize the internal clock here
 
                 if(std::find(globalIDPacketList.begin(), globalIDPacketList.end(), packetGlobalIDPacket) != globalIDPacketList.end()){
-                    //we already received this beacon, no retransmission
+                    Log alreadyBeacon("Node "+std::to_string(nodeId)+" already received this beacon, dropping", true);
+                    logger.logMessage(alreadyBeacon);
                     return;
                 }else{
                     //it's a new beacon, we reenter boradcast mode regardless of the beacons left to send
@@ -152,6 +165,19 @@
             //a "new" beacon has just been received, we plan the random slots
             shouldSendBeacon=false;
             beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+            std::ostringstream oss;
+            for (size_t i = 0; i < beaconSlots.size(); ++i) {
+                oss << beaconSlots[i];
+                if (i < beaconSlots.size() - 1) {
+                    oss << ", "; // Add a separator between elements
+                 }
+
+            } 
+
+            Log beaconSlotsLog("Node "+std::to_string(nodeId)+" will send beacons at slots: "+oss.str(), true);
+            logger.logMessage(beaconSlotsLog);
+
+
         }
         if(beaconSlots.size()>0){
             //we have beacons to send 
@@ -186,10 +212,13 @@
                 addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirBeacon));
                 beaconSlots.erase(beaconSlots.begin());
             }
-            //decrease every elements of the slots by one
-            for(int i=0;i<beaconSlots.size();i++){
-                beaconSlots[i]--;
+            if(!beaconSlots.empty()){
+                 //decrease every elements of the slots by one
+                for(int i=0;i<beaconSlots.size();i++){
+                    beaconSlots[i]--;
+                }
             }
+           
         }             
         return true; 
     }
