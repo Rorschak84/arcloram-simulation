@@ -24,26 +24,18 @@
         return true;
     }
 
-    void C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
+    bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
     {
         if(!canNodeReceiveMessage()){
              Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
              logger.logMessage(notlisteninglog);
-            return;
+            return false;
         }
 
-        Node::receiveMessage(message, timeOnAir);//for the interference model
-
-        //there is one message in the receiveBuffer if no interference
-        {
-            std::lock_guard<std::mutex> lock(receiveMutex);
-            if(!getNextReceivedMessage().has_value()){
-                return; //interference
-            }
-            
-            receiveBuffer.pop();//the buffer is supposed to hold only one message at a time
-
-        }
+       if(!Node::receiveMessage(message, timeOnAir)){
+            //an interference happened, we don't treat the message
+            return false;
+       } 
 
 
 
@@ -53,7 +45,7 @@
             Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
             logger.logMessage(wrongTypeLog);
             receiveBuffer.pop();
-            return;
+            return false;
         }
 
 
@@ -76,6 +68,7 @@
             globalIDPacketList.push_back(packetGlobalIDPacket);
             pathCost=packetPathCost+5; //should take into account the battery TODO
             nextNodeIdInPath=packetNextNodeIdInPath;
+            return true;
         }
         else{ 
             if(nextNodeIdInPath==packetNextNodeIdInPath){
@@ -106,48 +99,19 @@
                 if(std::find(globalIDPacketList.begin(), globalIDPacketList.end(), packetGlobalIDPacket) != globalIDPacketList.end()){
                     Log alreadyBeacon("Node "+std::to_string(nodeId)+" already received this beacon, dropping", true);
                     logger.logMessage(alreadyBeacon);
-                    return;
+                    
                 }else{
                     //it's a new beacon, we reenter boradcast mode regardless of the beacons left to send
                     globalIDPacketList.push_back(packetGlobalIDPacket);
                     shouldSendBeacon=true;//at next transmission slots, will create the new sending beacon scheduler
                     beaconSlots.clear();
                 }
-            }                               
+            }    
+
+            return true;   //it's for the compiler to not throw a warning, we never capture this variable                     
         }
     }
     
-
-    // TODO: put them in the common
-    int C2_Node::computeRandomNbBeaconPackets()
-    {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(common::minimumNbBeaconPackets,common::maximumNbBeaconPackets);
-        return dis(gen);
-    }
-
-    std::vector<int> C2_Node::selectRandomSlots(int m)
-    {
-        // Step 1: Create a vector of slots [0, 1, ..., n-1]
-        std::vector<int> slots(common::nbSlotsPossibleForOneBeacon);
-        for (int i = 0; i < common::nbSlotsPossibleForOneBeacon; ++i) {
-            slots[i] = i;
-        }
-
-        // Step 2: Shuffle the vector randomly
-        std::random_device rd;  // Seed for random number generator
-        std::mt19937 rng(rd()); // Mersenne Twister RNG
-        std::shuffle(slots.begin(), slots.end(), rng);
-
-        // Step 3: Take the first m slots
-        std::vector<int> selected(slots.begin(), slots.begin() + m);
-        
-        // Step 4: Sort the selected slots in ascending order
-        std::sort(selected.begin(), selected.end());
-
-        return selected;
-    }
 
     bool C2_Node::canSleepFromCommunicating()
     {   //Node Can alwasy sleep
@@ -159,7 +123,6 @@
 
     bool C2_Node::canCommunicateFromSleeping() { 
         isTransmittingWhileCommunicating=false;
-
         currentState=NodeState::Communicating;
         if(shouldSendBeacon&&beaconSlots.size()==0){
             //a "new" beacon has just been received, we plan the random slots
@@ -173,11 +136,8 @@
                  }
 
             } 
-
             Log beaconSlotsLog("Node "+std::to_string(nodeId)+" will send beacons at slots: "+oss.str(), true);
             logger.logMessage(beaconSlotsLog);
-
-
         }
         if(beaconSlots.size()>0){
             //we have beacons to send 
@@ -240,6 +200,89 @@
     bool C2_Node::canSleepFromTransmitting() { return false; }
     bool C2_Node::canSleepFromListening() { return false; }
     bool C2_Node::canSleepFromSleeping() { return false; }
+
+
+#elif COMMUNICATION_PERIOD == RRC_DOWNLINK
+
+    bool C2_Node::canNodeReceiveMessage() {
+        // State Condition: node must be listening to receive a message
+        if(currentState!=NodeState::Listening&&currentState!=NodeState::Communicating){
+            return false;
+        }
+        else if(currentState==NodeState::Communicating){
+                return !isTransmittingWhileCommunicating;
+        }
+        return true;
+    }
+
+
+bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
+    {
+        if(!canNodeReceiveMessage()){
+             Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
+             logger.logMessage(notlisteninglog);
+            return false;
+        }
+
+       if(!Node::receiveMessage(message, timeOnAir)){
+            //an interference happened, we don't treat the message
+            return false;
+       } 
+
+
+
+        uint8_t type=extractBytesFromField(message,"type");
+        if(type!=common::type[0]){
+            //not a beacon, we don't care
+            Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
+            logger.logMessage(wrongTypeLog);
+            receiveBuffer.pop();
+            return false;
+        }
+
+
+        uint8_t packetSenderId=extractBytesFromField(message,"senderGlobalId");
+        uint32_t packetReceiverId=extractBytesFromField(message,"receiverGlobalId");
+        uint16_t packetGlobalIDPacket=extractBytesFromField(message,"globalIDPacket");
+        uint8_t packetPayload=extractBytesFromField(message,"payload");
+        uint8_t packetHashFunction=extractBytesFromField(message,"hashFunction");
+        // //TODO: remove the buffer?? maybe it's just used by the simulation manager
+        // receiveBuffer.pop();//we don't care about the other messages
+        // //actually, we don't really care about the receiving buffer, since each message is treated as soon as it is received.
+
+        if(packetReceiverId==nodeId){//add C1 Childs condition when you implement more complex topology
+            //THe packet is for us!
+            Log finalReceiverLog("Node "+std::to_string(nodeId)+" received a packet for him", true);
+            logger.logMessage(finalReceiverLog);
+            return true;
+        }
+
+        std::lock_guard<std::mutex> lock(receiveMutex);
+        if(globalIDPacketList.empty()){
+            //this is the first beacon received
+            shouldSendBeacon=true; //next tranmission slots, will create the new sending beacon scheduler
+           globalIDPacketList.push_back(packetGlobalIDPacket);     
+           packetFinalReceiverId=packetReceiverId;   
+            return true;
+        }
+        else{ 
+   
+                if(std::find(globalIDPacketList.begin(), globalIDPacketList.end(), packetGlobalIDPacket) != globalIDPacketList.end()){
+                    Log alreadyBeacon("Node "+std::to_string(nodeId)+" already received this beacon, dropping", true);
+                    logger.logMessage(alreadyBeacon);
+                    
+                }else{
+                    //This case should not happen too often, the C1 are supposed to wait 
+                    globalIDPacketList.push_back(packetGlobalIDPacket);
+                    shouldSendBeacon=true;//at next transmission slots, will create the new sending beacon scheduler
+                    beaconSlots.clear();
+                }
+            }    
+
+            return true;   //it's for the compiler to not throw a warning, we never capture this variable                     
+        }
+    
+    
 
 
 #else

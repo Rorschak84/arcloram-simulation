@@ -61,10 +61,61 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
 
 //-----------------------------------------Communication Mode and  Topology-----------------------------------------
 
-#define COMMUNICATION_PERIOD RRC_BEACON
-#define TOPOLOGY Line
+#define COMMUNICATION_PERIOD 2
 
-#if COMMUNICATION_PERIOD == RRC_BEACON
+#define RRC_BEACON 1
+#define RRC_DOWNLINK 2
+#define RRC_UPLINK 3
+#define ENC_BEACON 11
+#define ENC_DOWNLINK 12
+#define ENC_UPLINK 13
+
+#define TOPOLOGY 1
+#define LINE 1
+#define STAR 2
+#define MESH 3
+
+#if COMMUNICATION_PERIOD == RRC_DOWNLINK
+    constexpr const char* communicationMode = "RRC_Downlink";
+
+    //For the Protocol Stack in Nodes
+    constexpr const int minimumNbBeaconPackets=2;
+    constexpr const int maximumNbBeaconPackets=4;
+    constexpr const int nbSlotsPossibleForOneBeacon=10;
+    constexpr const int guardTime=50; //a sufficient guard time is needed to be sure every nodes that should are able to receive messages
+    constexpr const int typePacket=0x02;
+    constexpr const int timeOnAirFlood=70;//This should be quite high. Indeed, we don't have transmit from every nodes, and then receives for every paclets for every nodes, by having a great TOA we bypass this limitation TODO: change this to have a more resilient simulation 
+
+
+    //For the Time Division Multiple Access Scheme in Seed
+    constexpr  const unsigned int lengthTransmissionWindow = 500;
+    constexpr  const  unsigned int lengthSleepingWindow = 1000;
+    constexpr  const  unsigned int nbComWindows =40;
+
+    constexpr const int typeBytesSize=1;
+    constexpr const int senderGlobalIdBytesSize=2;
+    constexpr const int receiverGlobalIdBytesSize=2;
+    constexpr const int globalIDPacketBytesSize=2;
+    constexpr const int payloadSizeBytesSize=4;
+    constexpr const int hashFunctionBytesSize=4;
+
+
+    // Format: { "field_name", {start_index, size_in_bytes} }
+    inline const std::unordered_map<std::string,std::pair<size_t, size_t>> fieldMap ={
+
+        {"type", {0, typeBytesSize}},             // "type" starts at index 0, 1 byte long
+        {"senderGlobalId", {1, senderGlobalIdBytesSize}},       // "senderGlobalId" starts at index 1, 2 bytes long
+        {"receiverGlobalId", {3, receiverGlobalIdBytesSize}},    // "receiverGlobalId" starts at index 3, 2 bytes long
+        {"globalIDPacket", {5, globalIDPacketBytesSize}},        // "globalIDPacket" starts at index 5, 2 bytes long
+        {"payloadSize", {7, payloadSizeBytesSize}},              // "payloadSize" starts at index 7, 4 bytes long
+        {"hashFunction", {11, hashFunctionBytesSize}}            // "hashFunction" starts at index 11, 4 bytes long    
+    };
+
+    //static fields for this mode
+    inline  const std::vector<uint8_t> type = {0x02}; // Type is 1 byte long in the simulation, 3 bits in real life
+
+
+#elif COMMUNICATION_PERIOD == RRC_BEACON
 
     constexpr const char* communicationMode = "RRC_Beacon";
 
@@ -97,7 +148,7 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
     constexpr const int globalIDPacketBytesSize=2;
     constexpr const int senderGlobalIdBytesSize=2;
     constexpr const int hashFunctionBytesSize=4;
-    constexpr const int totalBytesSize=16;
+ 
 
     // Format: { "field_name", {start_index, size_in_bytes} }
     inline const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap = {
@@ -121,10 +172,12 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
 #endif
 
 
-#if TOPOLOGY == Line
+#if TOPOLOGY == LINE
     constexpr const char* topology = "Line";
-#elif TOPOLOGY == Star
-    const char* topology = "Star";
+#elif TOPOLOGY == MESH
+    constexpr const char* topology = "Mesh";
+#elif TOPOLOGY == STAR
+    constexpr const char* topology = "Star";
 #else
     #error "Unknown TOPOLOGY mode"
 #endif

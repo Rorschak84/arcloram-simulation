@@ -18,10 +18,10 @@ public :
     }
     
     std::string initMessage() const override;
-
-    
  
     protected:
+
+
     bool canTransmitFromListening();
     bool canTransmitFromSleeping();
     bool canTransmitFromTransmitting();
@@ -42,9 +42,20 @@ public :
     bool canCommunicateFromSleeping();
     bool canCommunicateFromCommunicating();
 
-    void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
+    bool receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
 
-    #if COMMUNICATION_PERIOD == RRC_BEACON
+
+    #if COMMUNICATION_PERIOD == RRC_DOWNLINK
+
+    bool shouldSendBeacon=false;
+    std::vector<int> beaconSlots; 
+    std::vector<uint16_t> globalIDPacketList;//
+    bool canNodeReceiveMessage();
+    bool isTransmittingWhileCommunicating=false;   
+    std::optional<uint32_t> packetFinalReceiverId ;
+
+
+    #elif COMMUNICATION_PERIOD == RRC_BEACON
 
         bool shouldSendBeacon=false;
         std::optional<uint8_t> hopCount;
@@ -54,18 +65,13 @@ public :
         std::vector<uint16_t> globalIDPacketList;//
         std::optional<uint8_t> pathCost;
         std::optional<uint16_t> nextNodeIdInPath;
-
-
-        //TODO: put these two functions in a common file, same for C3 (use inline) 
-        int computeRandomNbBeaconPackets();
-        //selecte m slots randomly in the n slots, and return an orderred list of the selected slots
-        std::vector<int> selectRandomSlots(int m);
-
         bool canNodeReceiveMessage();
         bool isTransmittingWhileCommunicating=false;
+
 
 
     #else
         #error "Unknown COMMUNICATION_PERIOD mode"
     #endif
+
 };

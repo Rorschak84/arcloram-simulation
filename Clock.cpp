@@ -1,4 +1,5 @@
 #include "Clock.hpp"
+#include <string>
 
 void Clock::start(){
         
@@ -74,7 +75,7 @@ void Clock::tick() {
            
         } else {
 
-            Log callbacks("During tick: "+std::to_string(compteurTick)+ ", callbacks found for time: "+std::to_string(time), true);
+            Log callbacks("During tick: "+std::to_string(compteurTick)/*+ ", callbacks found for time: "+std::to_string(time)*/, true);
             logger.logMessage(callbacks);
             for (auto it = range.first; it != range.second; ++it) {
                 callbacksToExecute.push_back(it->second); // Collect the callback

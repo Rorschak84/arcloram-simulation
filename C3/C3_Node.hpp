@@ -17,7 +17,7 @@ public :
     }
     std::string initMessage() const override;
 
-    void receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
+    bool receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir) override;
 
 
 
@@ -31,14 +31,9 @@ protected:
     std::vector<int> beaconSlots; // ex: {0,  3, 4, 9} -> beacon to send now, in three slots, in four slots, in nine slots
     bool shouldSendBeacon=true;
 
-
-
-
-    //TODO: put them in common 
-    int computeRandomNbBeaconPackets();
-
-    //selecte m slots randomly in the n slots, and return an orderred list of the selected slots
-    std::vector<int> selectRandomSlots(int m);
+#elif COMMUNICATION_PERIOD == RRC_DOWNLINK
+    std::vector<int> beaconSlots;
+    bool shouldSendBeacon=true;
 
 #else
     #error "Unknown COMMUNICATION_PERIOD mode"

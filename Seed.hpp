@@ -41,4 +41,5 @@ private:
     void initializeNodes();
     void initialize_RRC_Beacon_Line();
     void initialize_RRC_Beacon_Mesh();
+    void initialize_RRC_Downlink_Line();
 };

@@ -3,7 +3,9 @@
 #include <vector>
 #include <string>
 #include <cstdint>
-
+#include <random>
+#include <algorithm>
+#include "Common.hpp"
 
 
 // Function to get the current timestamp as a 4-byte value
@@ -33,3 +35,39 @@ std::string bytesToBinary(const std::vector<uint8_t>& packet);
 inline auto appendVector = [](std::vector<uint8_t>& dest, const std::vector<uint8_t>& src) {
     dest.insert(dest.end(), src.begin(), src.end());
 };
+
+
+//----------------UTILITIES FOR RANDOMNESS-----------------
+
+
+inline int computeRandomNbBeaconPackets() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(common::minimumNbBeaconPackets, common::maximumNbBeaconPackets);
+        return dis(gen);
+    }
+
+
+
+
+inline  std::vector<int> selectRandomSlots(int m) {
+    
+        // Step 1: Create a vector of slots [0, 1, ..., n-1]
+        std::vector<int> slots(common::nbSlotsPossibleForOneBeacon);
+        for (int i = 0; i < common::nbSlotsPossibleForOneBeacon; ++i) {
+            slots[i] = i;
+        }
+
+        // Step 2: Shuffle the vector randomly
+        std::random_device rd;  // Seed for random number generator
+        std::mt19937 rng(rd()); // Mersenne Twister RNG
+        std::shuffle(slots.begin(), slots.end(), rng);
+
+        // Step 3: Take the first m slots
+        std::vector<int> selected(slots.begin(), slots.begin() + m);
+        
+        // Step 4: Sort the selected slots in ascending order
+        std::sort(selected.begin(), selected.end());
+
+        return selected;
+    }

@@ -14,39 +14,12 @@ std::string C3_Node::initMessage() const{
 #if COMMUNICATION_PERIOD == RRC_BEACON
 
 
-    void C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir){
+    bool C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir){
             Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg "/*+detailedBytesToString( message)*/, true);
              logger.logMessage(notlisteninglog);
-            return;
+            return false;
     }
-    //-----------------------utilities------------------
-    int C3_Node::computeRandomNbBeaconPackets() {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(common::minimumNbBeaconPackets, common::maximumNbBeaconPackets);
-        return dis(gen);
-    }
-    std::vector<int> C3_Node::selectRandomSlots(int m) {
-    
-        // Step 1: Create a vector of slots [0, 1, ..., n-1]
-        std::vector<int> slots(common::nbSlotsPossibleForOneBeacon);
-        for (int i = 0; i < common::nbSlotsPossibleForOneBeacon; ++i) {
-            slots[i] = i;
-        }
 
-        // Step 2: Shuffle the vector randomly
-        std::random_device rd;  // Seed for random number generator
-        std::mt19937 rng(rd()); // Mersenne Twister RNG
-        std::shuffle(slots.begin(), slots.end(), rng);
-
-        // Step 3: Take the first m slots
-        std::vector<int> selected(slots.begin(), slots.begin() + m);
-        
-        // Step 4: Sort the selected slots in ascending order
-        std::sort(selected.begin(), selected.end());
-
-        return selected;
-    }
 
     //---------------------------state Transition--------------------
     bool C3_Node::canTransmitFromSleeping() { 
@@ -125,6 +98,108 @@ std::string C3_Node::initMessage() const{
         return true; 
         }
 
+
+    //Unauthorized transition in this mode.
+    bool C3_Node::canTransmitFromTransmitting() { return false; }
+    bool C3_Node::canTransmitFromCommunicating(){return false;}
+    bool C3_Node::canTransmitFromListening() { return false; }
+    bool C3_Node::canListenFromTransmitting() { return false; }
+    bool C3_Node::canListenFromSleeping() { return false; }
+    bool C3_Node::canListenFromListening() { return false; }
+    bool C3_Node::canListenFromCommunicating(){return true;}
+    bool C3_Node::canSleepFromListening() { return false; }
+    bool C3_Node::canSleepFromSleeping() { return false; }
+    bool C3_Node::canSleepFromCommunicating(){return false;}
+    bool C3_Node::canCommunicateFromTransmitting(){return false;}
+    bool C3_Node::canCommunicateFromListening(){return false;}
+    bool C3_Node::canCommunicateFromSleeping(){return false;}
+    bool C3_Node::canCommunicateFromCommunicating(){return false;}
+
+#elif COMMUNICATION_PERIOD == RRC_DOWNLINK
+
+   bool C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir){
+            Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg "/*+detailedBytesToString( message)*/, true);
+             logger.logMessage(notlisteninglog);
+            return false;
+    }
+
+    //---------------------------state Transition--------------------
+    bool C3_Node::canTransmitFromSleeping() { 
+
+        currentState=NodeState::Transmitting;
+        // Log transitionLog("Node "+std::to_string(nodeId)+" is in transmission Mode", true);
+        // logger.logMessage(transitionLog);  
+        if(beaconSlots.size()==0 && !shouldSendBeacon){
+            return true;//we finished to send our beacons, but the node stays in transmission mode to not fuck up my implementation lol, would be possible to implement this behaviour but it's just simpler like this
+                        //overall this simulator is far from being close to a real behavior of a node
+        }
+        else if(beaconSlots.size()==0 &&shouldSendBeacon){// we compute the randomness of slots (see the thesis report)
+            shouldSendBeacon=false;
+            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+        }
+
+        if(beaconSlots[0]==0){
+
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime)); 
+
+
+
+            //-------------------------------------define Beacon Packet----------------------------
+            //----------least signficant byte first (little endian) !------------
+            std::vector<uint8_t> globalIDPacket= {0x01,0x00 }; //Global ID is 2 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> senderGlobalId = decimalToBytes(nodeId,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+           
+            std::vector<uint8_t> receiverGlobalId = decimalToBytes(nodeId,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> payload = {0xFF,0xFF,0xFF,0xFF}; //Payload Size is 4 byte long in the simulation, 10 bits in real life
+           
+            //dummy hash: we don't implement the hash function in this simulation
+            std::vector<uint8_t> hashFunction = {0x00,0x00,0x00,0x00}; //Hash Function is 4 byte long in the simulation AND in real life
+
+
+
+            // Concatenate fields into one vector
+            std::vector<uint8_t> beaconPacket;
+
+            //preallocate the space for optimization
+            //TODO: should use the size in the common file, not the variable, source of error
+            beaconPacket.reserve(common::type.size() + 
+                            senderGlobalId.size() +
+                            receiverGlobalId.size() +
+                            globalIDPacket.size() +
+                            payload.size() +                            
+                            + hashFunction.size());
+
+            // Append all fields
+            appendVector(beaconPacket, common::type);
+            appendVector(beaconPacket, senderGlobalId);
+            appendVector(beaconPacket, receiverGlobalId);
+            appendVector(beaconPacket, globalIDPacket);
+            appendVector(beaconPacket, payload);
+            appendVector(beaconPacket, hashFunction);
+
+
+
+            addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirFlood));
+            //erase the first element of the list
+            beaconSlots.erase(beaconSlots.begin());
+        }
+        //decrease every elements of the slots by one
+        if(beaconSlots.size()==0){
+            return true;
+        }
+        for(int i=0;i<beaconSlots.size();i++){
+            beaconSlots[i]--;
+        }
+        return true;
+    }
+
+    bool C3_Node::canSleepFromTransmitting() { 
+        currentState=NodeState::Sleeping;
+        // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
+        // logger.logMessage(transitionLog);  
+        return true; 
+        }
 
     //Unauthorized transition in this mode.
     bool C3_Node::canTransmitFromTransmitting() { return false; }
