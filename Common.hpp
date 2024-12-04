@@ -61,19 +61,45 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
 
 //-----------------------------------------Communication Mode and  Topology-----------------------------------------
 
+
+
+
+
+
+
+//-----------------------------------------COMMUNICATION MODE-----------------------------------------
 #define COMMUNICATION_PERIOD 2
 
-#define RRC_BEACON 1
+#define RRC_BEACON 1  //not implemented
 #define RRC_DOWNLINK 2
 #define RRC_UPLINK 3
 #define ENC_BEACON 11
 #define ENC_DOWNLINK 12
 #define ENC_UPLINK 13
 
-#define TOPOLOGY 1
+
+//-----------------------------------------TOPOLOGY-----------------------------------------
+
+#define TOPOLOGY 3
 #define LINE 1
-#define STAR 2
+#define STAR 2 //not implemented
 #define MESH 3
+
+
+
+
+
+#if TOPOLOGY == LINE
+    constexpr const char* topology = "Line";
+#elif TOPOLOGY == MESH
+    constexpr const char* topology = "Mesh";
+#elif TOPOLOGY == STAR
+    constexpr const char* topology = "Star";
+#else
+    #error "Unknown TOPOLOGY mode"
+#endif
+
+
 
 #if COMMUNICATION_PERIOD == RRC_DOWNLINK
     constexpr const char* communicationMode = "RRC_Downlink";
@@ -107,7 +133,7 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
         {"senderGlobalId", {1, senderGlobalIdBytesSize}},       // "senderGlobalId" starts at index 1, 2 bytes long
         {"receiverGlobalId", {3, receiverGlobalIdBytesSize}},    // "receiverGlobalId" starts at index 3, 2 bytes long
         {"globalIDPacket", {5, globalIDPacketBytesSize}},        // "globalIDPacket" starts at index 5, 2 bytes long
-        {"payloadSize", {7, payloadSizeBytesSize}},              // "payloadSize" starts at index 7, 4 bytes long
+        {"payload", {7, payloadSizeBytesSize}},              // "payloadSize" starts at index 7, 4 bytes long
         {"hashFunction", {11, hashFunctionBytesSize}}            // "hashFunction" starts at index 11, 4 bytes long    
     };
 
@@ -172,15 +198,6 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
 #endif
 
 
-#if TOPOLOGY == LINE
-    constexpr const char* topology = "Line";
-#elif TOPOLOGY == MESH
-    constexpr const char* topology = "Mesh";
-#elif TOPOLOGY == STAR
-    constexpr const char* topology = "Star";
-#else
-    #error "Unknown TOPOLOGY mode"
-#endif
 
 
  }

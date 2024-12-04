@@ -52,6 +52,9 @@ public :
     std::vector<uint16_t> globalIDPacketList;//
     bool canNodeReceiveMessage();
     bool isTransmittingWhileCommunicating=false;   
+
+    //this variable contains the id of the node that is the final receiver of the flooding packet circulating in the network
+    //use to bridge the receive function and the transmit function
     std::optional<uint32_t> packetFinalReceiverId ;
 
 

@@ -112,6 +112,7 @@
         }
     }
     
+    //----------------------------STATE TRANSITIONS--------------------------------
 
     bool C2_Node::canSleepFromCommunicating()
     {   //Node Can alwasy sleep
@@ -226,6 +227,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
 
        if(!Node::receiveMessage(message, timeOnAir)){
             //an interference happened, we don't treat the message
+            //TODO: put the logs here?
             return false;
        } 
 
@@ -282,8 +284,105 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
             return true;   //it's for the compiler to not throw a warning, we never capture this variable                     
         }
     
-    
 
+    //----------------------------STATE TRANSITIONS--------------------------------
+
+   bool C2_Node::canCommunicateFromSleeping() { 
+
+
+        isTransmittingWhileCommunicating=false;
+        currentState=NodeState::Communicating;
+        if(shouldSendBeacon&&beaconSlots.size()==0){
+            //a "new" beacon has just been received, we plan the random slots
+            shouldSendBeacon=false;
+            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+            std::ostringstream oss;
+            for (size_t i = 0; i < beaconSlots.size(); ++i) {
+                oss << beaconSlots[i];
+                if (i < beaconSlots.size() - 1) {
+                    oss << ", "; // Add a separator between elements
+                 }
+
+            } 
+            // Log beaconSlotsLog("Node "+std::to_string(nodeId)+" will send beacons at slots: "+oss.str(), true);
+            // logger.logMessage(beaconSlotsLog);
+        }
+        if(beaconSlots.size()>0){
+            //we have beacons to send 
+            if(beaconSlots[0]==0){
+                isTransmittingWhileCommunicating=true;
+                std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime));
+
+
+            //-------------------------------------define Beacon Packet----------------------------
+            //----------least signficant byte first (little endian) !------------
+            std::vector<uint8_t> globalIDPacket= decimalToBytes( globalIDPacketList.back(), common::globalIDPacketBytesSize); //Global ID is 2 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> senderGlobalId = decimalToBytes(nodeId,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+           
+            std::vector<uint8_t> receiverGlobalId = decimalToBytes(packetFinalReceiverId.value(),2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> payload = {0xFF,0xFF,0xFF,0xFF}; //Payload Size is 4 byte long in the simulation, 40 Bytes max in real life
+           
+            //dummy hash: we don't implement the hash function in this simulation
+            std::vector<uint8_t> hashFunction = {0x00,0x00,0x00,0x00}; //Hash Function is 4 byte long in the simulation AND in real life
+
+
+
+            // Concatenate fields into one vector
+            std::vector<uint8_t> beaconPacket;
+
+            //preallocate the space for optimization
+            //TODO: should use the size in the common file, not the variable, source of error
+            beaconPacket.reserve(common::type.size() + 
+                            senderGlobalId.size() +
+                            receiverGlobalId.size() +
+                            globalIDPacket.size() +
+                            payload.size() +                            
+                            + hashFunction.size());
+
+            // Append all fields
+            appendVector(beaconPacket, common::type);
+            appendVector(beaconPacket, senderGlobalId);
+            appendVector(beaconPacket, receiverGlobalId);
+            appendVector(beaconPacket, globalIDPacket);
+            appendVector(beaconPacket, payload);
+            appendVector(beaconPacket, hashFunction);
+
+                addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirFlood));
+                beaconSlots.erase(beaconSlots.begin());
+            }
+            if(!beaconSlots.empty()){
+                 //decrease every elements of the slots by one
+                for(int i=0;i<beaconSlots.size();i++){
+                    beaconSlots[i]--;
+                }
+            }
+           
+        }             
+        return true; 
+    }
+
+    bool C2_Node::canSleepFromCommunicating()
+    {   //Node Can alwasy sleep
+        currentState=NodeState::Sleeping;
+        // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
+        // logger.logMessage(transitionLog);   
+        return true;
+    }    
+    //Unauthorized transition in this mode.
+    bool C2_Node::canCommunicateFromTransmitting() { return false; }
+    bool C2_Node::canCommunicateFromListening() { return false; }
+    bool C2_Node::canCommunicateFromCommunicating() { return true; }
+    bool C2_Node::canTransmitFromListening() { return true; }
+    bool C2_Node::canTransmitFromSleeping() {return true; }
+    bool C2_Node::canTransmitFromTransmitting() { return true; }
+    bool C2_Node::canTransmitFromCommunicating(){return false;}
+    bool C2_Node::canListenFromTransmitting() { return true; }
+    bool C2_Node::canListenFromSleeping() {return false;}
+    bool C2_Node::canListenFromListening() { return false; }
+    bool C2_Node::canListenFromCommunicating(){return false;}
+    bool C2_Node::canSleepFromTransmitting() { return false; }
+    bool C2_Node::canSleepFromListening() { return false; }
+    bool C2_Node::canSleepFromSleeping() { return false; }
 
 #else
     #error "Unknown COMMUNICATION_PERIOD mode"

@@ -28,7 +28,7 @@ void Seed::initializeNodes()
             initialize_RRC_Downlink_Line();
         }      
         else if (use_case=="RRC_Downlink_Mesh"){
-            //initialize_RRC_Downlink_Mesh();
+            initialize_RRC_Beacon_Mesh(); //Provisionning is the same, TDMA may differ, if protocol is fully implemented
         }
 
         //for other uses cases, you will probably have to create additional constructors for C3, C2.. to provision the element 
@@ -39,13 +39,21 @@ void Seed::initializeNodes()
 
 
 void Seed::initialize_RRC_Beacon_Mesh(){
-        /*                 -- C2--
+        /*                 -- C2--              
                        ---        ---
                  ---C2-----------------C2
                 ---        ---      ---
             C3                --C2-- 
               ---          ---     --       
                  ---C2---            --C2
+
+        *                 ----4 ----              
+                       ---        ---
+                 --- 1----------------- 5
+                ---       ---      ---
+             0               -- 3-- 
+              ---         ---     --       
+                 --- 2---            -- 6         
         */
 
         //create a C3 node
@@ -58,15 +66,17 @@ void Seed::initialize_RRC_Beacon_Mesh(){
         
             firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+(i+1)*common::lengthTransmissionWindow, WindowNodeState::CanSleep);
         }
+        listNode.push_back(firstNode);
+
 
             // Create C2 nodes in a mesh configuration
         int nbC2Nodes=6;
         std::vector<std::pair<int, int>> coordinatesC2 = {std::make_pair(600, 600), std::make_pair(600, -600), std::make_pair(1200, 0),
-        std::make_pair(1200, 1800), std::make_pair(1800, 600), std::make_pair(1800, -600)};
+        std::make_pair(1200, 1200), std::make_pair(1800, 600), std::make_pair(1800, -600)};
 
-        for( int i = 1; i<nbC2Nodes; i++){
+        for( int i = 1; i<nbC2Nodes+1; i++){
             
-            auto node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i],dispatchCv,dispatchCvMutex); // Create a smart pointer
+            auto node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i-1],dispatchCv,dispatchCvMutex); // Create a smart pointer
 
             for (size_t i = 0; i < common::nbComWindows; i++)
             {   

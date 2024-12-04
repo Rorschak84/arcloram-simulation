@@ -150,8 +150,8 @@ std::string C3_Node::initMessage() const{
             std::vector<uint8_t> globalIDPacket= {0x01,0x00 }; //Global ID is 2 byte long in the simulation, 10 bits in real life
             std::vector<uint8_t> senderGlobalId = decimalToBytes(nodeId,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
            
-            std::vector<uint8_t> receiverGlobalId = decimalToBytes(nodeId,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
-            std::vector<uint8_t> payload = {0xFF,0xFF,0xFF,0xFF}; //Payload Size is 4 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> receiverGlobalId = decimalToBytes(3,2); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+            std::vector<uint8_t> payload = {0xFF,0xFF,0xFF,0xFF}; //Payload Size is 4 byte long in the simulation, 40 Bytes max in real life
            
             //dummy hash: we don't implement the hash function in this simulation
             std::vector<uint8_t> hashFunction = {0x00,0x00,0x00,0x00}; //Hash Function is 4 byte long in the simulation AND in real life
