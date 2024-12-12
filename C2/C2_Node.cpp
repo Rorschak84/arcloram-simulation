@@ -73,6 +73,12 @@
             globalIDPacketList.push_back(packetGlobalIDPacket);
             pathCost=packetPathCost+5; //should take into account the battery TODO
             nextNodeIdInPath=packetNextNodeIdInPath;
+
+            sf::Packet routingPacketReceiver;
+            routingDecisionPacket routingPacket(nodeId,nextNodeIdInPath.value(),true);
+            routingPacketReceiver<<routingPacket;
+            logger.sendTcpPacket(routingPacketReceiver);
+
             return true;
         }
         else{ 
@@ -90,7 +96,20 @@
                      //the optimized path has changed - the path is independent from the fact we resend beacon
                     pathCost=packetPathCost+5;
                     hopCount=packetHopCount+1;
-                    nextNodeIdInPath=  packetNextNodeIdInPath;     
+
+                    //we supress the old routing in the visualiser....
+                    sf::Packet routingPacketReceiver;
+                    routingDecisionPacket routingPacket(nodeId,nextNodeIdInPath.value(),false);
+                    routingPacketReceiver<<routingPacket;
+                    logger.sendTcpPacket(routingPacketReceiver);
+
+                    nextNodeIdInPath=  packetNextNodeIdInPath;    
+
+                    //and add the new one
+                    sf::Packet routingPacketReceiver2;
+                    routingDecisionPacket routingPacket2(nodeId,nextNodeIdInPath.value(),false);
+                    routingPacketReceiver2<<routingPacket2;
+                    logger.sendTcpPacket(routingPacketReceiver2); 
                 }
             }
 
@@ -121,6 +140,11 @@
 
     bool C2_Node::canSleepFromCommunicating()
     {   //Node Can alwasy sleep
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
         currentState=NodeState::Sleeping;
         // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
         // logger.logMessage(transitionLog);   
@@ -128,6 +152,12 @@
     }
 
     bool C2_Node::canCommunicateFromSleeping() { 
+
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Communicate");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
         isTransmittingWhileCommunicating=false;
         currentState=NodeState::Communicating;
         if(shouldSendBeacon&&beaconSlots.size()==0){
@@ -174,6 +204,11 @@
                 appendVector(beaconPacket, newGlobalIDPacket);
                 appendVector(beaconPacket, newSenderGlobalId);
                 appendVector(beaconPacket, newHashFunction);
+
+                sf::Packet broadcastPacketReceiver;
+                broadcastMessagePacket broadcastPacket(nodeId);
+                broadcastPacketReceiver<<broadcastPacket;
+                logger.sendTcpPacket(broadcastPacketReceiver);
 
                 addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirBeacon));
                 beaconSlots.erase(beaconSlots.begin());
@@ -294,6 +329,10 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
 
    bool C2_Node::canCommunicateFromSleeping() { 
 
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Communicate");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
 
         isTransmittingWhileCommunicating=false;
         currentState=NodeState::Communicating;
@@ -352,6 +391,11 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
             appendVector(beaconPacket, payload);
             appendVector(beaconPacket, hashFunction);
 
+            sf::Packet broadcastPacketReceiver;
+            broadcastMessagePacket broadcastPacket(nodeId);
+            broadcastPacketReceiver<<broadcastPacket;
+            logger.sendTcpPacket(broadcastPacketReceiver);
+
                 addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirFlood));
                 beaconSlots.erase(beaconSlots.begin());
             }
@@ -368,6 +412,12 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
 
     bool C2_Node::canSleepFromCommunicating()
     {   //Node Can alwasy sleep
+
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
         currentState=NodeState::Sleeping;
         // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
         // logger.logMessage(transitionLog);   

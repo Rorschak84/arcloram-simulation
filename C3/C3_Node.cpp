@@ -29,6 +29,11 @@ std::string C3_Node::initMessage() const{
     //---------------------------state Transition--------------------
     bool C3_Node::canTransmitFromSleeping() { 
 
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Transmit");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
         currentState=NodeState::Transmitting;
         // Log transitionLog("Node "+std::to_string(nodeId)+" is in transmission Mode", true);
         // logger.logMessage(transitionLog);  
@@ -83,6 +88,12 @@ std::string C3_Node::initMessage() const{
 
 
             addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirBeacon));
+
+            sf::Packet broadcastPacketReceiver;
+            broadcastMessagePacket broadcastPacket(nodeId);
+            broadcastPacketReceiver<<broadcastPacket;
+            logger.sendTcpPacket(broadcastPacketReceiver);
+
             //erase the first element of the list
             beaconSlots.erase(beaconSlots.begin());
         }
@@ -97,6 +108,11 @@ std::string C3_Node::initMessage() const{
     }
 
     bool C3_Node::canSleepFromTransmitting() { 
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
         currentState=NodeState::Sleeping;
         // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
         // logger.logMessage(transitionLog);  
@@ -130,6 +146,11 @@ std::string C3_Node::initMessage() const{
 
     //---------------------------state Transition--------------------
     bool C3_Node::canTransmitFromSleeping() { 
+
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Transmit");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
 
         currentState=NodeState::Transmitting;
         // Log transitionLog("Node "+std::to_string(nodeId)+" is in transmission Mode", true);
@@ -184,7 +205,11 @@ std::string C3_Node::initMessage() const{
             appendVector(beaconPacket, hashFunction);
 
 
-
+            sf::Packet broadcastPacketReceiver;
+            broadcastMessagePacket broadcastPacket(nodeId);
+            broadcastPacketReceiver<<broadcastPacket;
+            logger.sendTcpPacket(broadcastPacketReceiver);
+            
             addMessageToTransmit(beaconPacket,std::chrono::milliseconds(common::timeOnAirFlood));
             //erase the first element of the list
             beaconSlots.erase(beaconSlots.begin());
@@ -200,6 +225,12 @@ std::string C3_Node::initMessage() const{
     }
 
     bool C3_Node::canSleepFromTransmitting() { 
+
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
         currentState=NodeState::Sleeping;
         // Log transitionLog("Node "+std::to_string(nodeId)+" sleeps", true);
         // logger.logMessage(transitionLog);  
