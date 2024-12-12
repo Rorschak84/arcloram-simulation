@@ -2,7 +2,7 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "C/C++: g++.exe build all files",
+            "label": "C/C++: g++.exe build all files with sfml",
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
@@ -11,6 +11,10 @@
                 "C1\\*.cpp",
                 "C2\\*.cpp",
                 "C3\\*.cpp",
+                "-I", "C:\\Users\\Simon\\Desktop\\MASTER_THESIS\\visualiser\\vsCode\\libraries\\SFML-2.6.2\\include",
+                "-L", "C:\\Users\\Simon\\Desktop\\MASTER_THESIS\\visualiser\\vsCode\\libraries\\SFML-2.6.2\\lib",
+                "-lsfml-system",
+                "-lsfml-network",
                 "-o",
                 "${workspaceFolder}\\simulation.exe"
             ],
@@ -40,8 +44,13 @@
                 "${workspaceFolder}\\C1\\*.cpp",
                 "${workspaceFolder}\\C2\\*.cpp",
                 "${workspaceFolder}\\C3\\*.cpp",
+                "${workspaceFolder}\\TCP\\*.cpp",
+                "-I", "C:\\Users\\Simon\\Desktop\\MASTER_THESIS\\visualiser\\vsCode\\libraries\\SFML-2.6.2\\include",
+                "-L", "C:\\Users\\Simon\\Desktop\\MASTER_THESIS\\visualiser\\vsCode\\libraries\\SFML-2.6.2\\lib",
+                "-lsfml-system",
+                "-lsfml-network",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${workspaceFolder}\\exec\\app.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"

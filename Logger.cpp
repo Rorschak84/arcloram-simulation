@@ -1,5 +1,5 @@
 #include "Logger.hpp"
-
+#include "Common.hpp"
 
 
     void Logger::start() {
@@ -21,10 +21,21 @@
         std::lock_guard<std::mutex> lock(queueMutex);
         if (log.forTerminal) {
             terminalQueue.push(log);
-        } else {
-            textQueue.push(log);
-        }
+        } 
         cv.notify_one();
+    }
+
+    void Logger::sendTcpPacket(sf::Packet packet){
+       
+        if(!common::visualiserConnected) return;
+        
+        std::lock_guard<std::mutex> lock(queueMutex);
+
+        if(packet){
+            tcpQueue.push(packet);
+            cv.notify_one();
+        }
+            
     }
 
 
@@ -32,14 +43,14 @@
 
     void Logger::processMessages() {
 
-        std::ofstream logFile("log.txt", std::ios::app); // Open log file in append mode
-        if (!logFile) {
-            std::cerr << "Failed to open log file!" << std::endl;
-            return;
-        }
+        // std::ofstream logFile("log.txt", std::ios::app); // Open log file in append mode
+        // if (!logFile) {
+        //     std::cerr << "Failed to open log file!" << std::endl;
+        //     return;
+        // }
 
 
-        std::vector<std::string> textBuffer; // Buffer for batch processing
+        // std::vector<std::string> textBuffer; // Buffer for batch processing
         std::vector<std::string> terminalBuffer; // Buffer for batch processing
         const size_t maxTerminalBufferSize = 5; // Set a buffer size limit
         const size_t maxTextBufferSize = 3; // Set a buffer size limit
@@ -49,20 +60,26 @@
         while (true) {
             std::unique_lock<std::mutex> lock(queueMutex); //unique allows more flexibility (lock unlock) than lock_guard
             cv.wait(lock, //makes the thread wait until the condition variable cv is notified.
-            [this] { return (!textQueue.empty()||!terminalQueue.empty()) || stopFlag; }); //ensures that the thread only proceeds if: one queue not empty OR stopflag is set
+            [this] { return (!tcpQueue.empty()||!terminalQueue.empty()) || stopFlag; }); //ensures that the thread only proceeds if: one queue not empty OR stopflag is set
             
-            //text messages--------------------------
-            while (!textQueue.empty()) {
+            //tcp packets--------------------------
+            while (!tcpQueue.empty()) {
+
+                if(client->transmit(tcpQueue.front())){
+                    tcpQueue.pop();
+                }
+                 else{
+                    
+                    if(common::visualiserConnected){
+                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                        //and we retry
+                    }
+                    else{
+                        break;
+                    }
 
 
-              textBuffer.push_back(textQueue.front().message);
-                textQueue.pop();
-
-
-            // Flush buffer if it reaches the limit
-            if (textBuffer.size() >= maxTextBufferSize) {
-                flushBuffer(logFile, textBuffer);
-            }
+                 }
             }
 
             //terminal messages--------------------
@@ -87,15 +104,9 @@
                     std::cout << msg << "\n"; //"\n" and endl is not the same !
                 }
                 std::cout<<std::flush;               
-                flushBuffer(logFile, textBuffer); // Flush remaining messages
+                // flushBuffer(logFile, textBuffer); // Flush remaining messages
                 break; // Exit the loop
             }
         }
     }
 
-void Logger::flushBuffer(std::ofstream& logFile, std::vector<std::string>& buffer) {
-    for (const auto& msg : buffer) {
-        logFile << msg << std::endl;
-    }
-    buffer.clear(); // Clear the buffer after writing
-}

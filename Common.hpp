@@ -57,7 +57,7 @@ constexpr const int tickIntervalForClock_ms=150; // The tick interval should be 
 constexpr const int baseTimeOffset=1000; //the base time offset allows the system to initialize before the TDMA begins
 constexpr const double distanceThreshold=1000; //the distance threshold for the PHY layer
 
-
+constexpr const bool visualiserConnected=true;//set false if you don't want to display the protocol
 
 //-----------------------------------------Communication Mode and  Topology-----------------------------------------
 
@@ -70,12 +70,12 @@ constexpr const double distanceThreshold=1000; //the distance threshold for the 
 //-----------------------------------------COMMUNICATION MODE-----------------------------------------
 #define COMMUNICATION_PERIOD 2
 
-#define RRC_BEACON 1  //not implemented
+#define RRC_BEACON 1  
 #define RRC_DOWNLINK 2
-#define RRC_UPLINK 3
-#define ENC_BEACON 11
-#define ENC_DOWNLINK 12
-#define ENC_UPLINK 13
+#define RRC_UPLINK 3    //not implemented
+#define ENC_BEACON 11   //not implemented
+#define ENC_DOWNLINK 12 //not implemented
+#define ENC_UPLINK 13   //not implemented
 
 
 //-----------------------------------------TOPOLOGY-----------------------------------------

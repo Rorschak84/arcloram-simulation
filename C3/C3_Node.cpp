@@ -1,10 +1,15 @@
 #include "C3_Node.hpp"
-
+#include "../TCP/packets.hpp"	
 
 std::string C3_Node::initMessage() const{
 
     std::string msg=Node::initMessage();
     std::string finalMsg= msg+ "Class: "+std::to_string(getClassId())+ " started to run";
+    
+    sf::Packet positionPacketReceiver;
+    positionPacket positionPacket(nodeId,3,coordinates);
+    positionPacketReceiver<<positionPacket;
+    logger.sendTcpPacket(positionPacketReceiver);
 
     return finalMsg;
 }

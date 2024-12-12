@@ -1,6 +1,6 @@
 #include "Clock.hpp"
 #include <string>
-
+#include "TCP/packets.hpp"
 void Clock::start(){
         
         /*
@@ -48,6 +48,10 @@ void Clock::stop(){
 
 void Clock::tick() {
     compteurTick++;
+    sf::Packet tickPacketReceiver;
+    tickPacket tickPacket(compteurTick);
+    tickPacketReceiver<<tickPacket;
+    logger.sendTcpPacket(tickPacketReceiver);
 
     //Collect the callbacks during the last processed time and the current time
     //execute them in the order they were scheduled

@@ -11,28 +11,38 @@
 #include "Clock.hpp"
 #include "Seed.hpp"
 #include "Common.hpp"
+#include "TCP/packets.hpp"
 
 
 
 
 int main() {
 
+    sf::TcpListener listener;
+
+// sf::TcpSocket socket;
+
 //---------------------------------System Initialization---------------------------------
     //Logger
-    Logger logger;
+    Logger logger("127.0.0.1",5000);
     logger.start();
 
+
+    //visualiser configuration
+    sf::Packet sysPacketReceiver;
+    systemPacket sysPacket(common::distanceThreshold, common::communicationMode);
+    sysPacketReceiver<<sysPacket;
+    logger.sendTcpPacket(sysPacketReceiver);
+
     //Clock
-     // Create a clock with a tick time of 5 milliseconds (it's actually a scheduler )
-     //there is a tradeoff between the performance of the simulation and the representation of real signals that are in the order of milliseconds
-     //TODO: make the tick interval configurable in common
+
     Clock clock(logger,common::tickIntervalForClock_ms);//the tick interval should not be too small(<=100) otherwise the simulation has unpredicatable behavior (it's not an optimized scheduler I made here)
     //convert base time to milliseconds
     int64_t  baseTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() ;
     baseTime+=common::baseTimeOffset; //allow the system to initialize before the TDMA begins
 
-    double distanceThreshold=1000;
-    SimulationManager manager(distanceThreshold,logger);
+    
+    SimulationManager manager(common::distanceThreshold,logger);
 
 //--------------------------------------------------------------Node Provisionning-------------------------------------------------
 

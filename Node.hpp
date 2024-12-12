@@ -76,7 +76,7 @@ public:
         return activationSchedule;
     }
 
-     void onTimeChange(WindowNodeState proposedState);
+    void onTimeChange(WindowNodeState proposedState);
 
 protected:
 
