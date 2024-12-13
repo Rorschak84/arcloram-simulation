@@ -79,6 +79,9 @@
             routingPacketReceiver<<routingPacket;
             logger.sendTcpPacket(routingPacketReceiver);
 
+            Log rootingLog("Node "+std::to_string(nodeId)+" rooting with Node:"+std::to_string(nextNodeIdInPath.value()), true);
+            logger.logMessage(rootingLog);
+
             return true;
         }
         else{ 
@@ -103,11 +106,17 @@
                     routingPacketReceiver<<routingPacket;
                     logger.sendTcpPacket(routingPacketReceiver);
 
-                    nextNodeIdInPath=  packetNextNodeIdInPath;    
+                    Log oldRootingLog("Node "+std::to_string(nodeId)+" FORGETTING rooting with Node:"+std::to_string(nextNodeIdInPath.value()), true);
+                    logger.logMessage(oldRootingLog);
+
+                    nextNodeIdInPath=  packetNextNodeIdInPath; 
+
+                    Log rootingLog("Node "+std::to_string(nodeId)+" rooting with Node:"+std::to_string(nextNodeIdInPath.value()), true);
+                    logger.logMessage(rootingLog);
 
                     //and add the new one
                     sf::Packet routingPacketReceiver2;
-                    routingDecisionPacket routingPacket2(nodeId,nextNodeIdInPath.value(),false);
+                    routingDecisionPacket routingPacket2(nodeId,nextNodeIdInPath.value(),true);
                     routingPacketReceiver2<<routingPacket2;
                     logger.sendTcpPacket(routingPacketReceiver2); 
                 }
@@ -172,8 +181,8 @@
                  }
 
             } 
-            Log beaconSlotsLog("Node "+std::to_string(nodeId)+" will send beacons at slots: "+oss.str(), true);
-            logger.logMessage(beaconSlotsLog);
+            // Log beaconSlotsLog("Node "+std::to_string(nodeId)+" will send beacons at slots: "+oss.str(), true);
+            // logger.logMessage(beaconSlotsLog);
         }
         if(beaconSlots.size()>0){
             //we have beacons to send 
@@ -296,6 +305,8 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
             //THe packet is for us!
             Log finalReceiverLog("Node "+std::to_string(nodeId)+" received a packet for him", true);
             logger.logMessage(finalReceiverLog);
+
+            //maybe put something to signify in the visualiser that It Works TODO
             return true;
         }
 
