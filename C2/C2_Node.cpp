@@ -34,15 +34,34 @@
         if(!canNodeReceiveMessage()){
              Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
              logger.logMessage(notlisteninglog);
+
+             sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId");
+            receiveMessagePacket receptionState(senderId,nodeId,"notListening");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
+
             return false;
         }
 
        if(!Node::receiveMessage(message, timeOnAir)){
             //an interference happened, we don't treat the message
+            
+            sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId");
+            receiveMessagePacket receptionState(senderId,nodeId,"interference");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
+
             return false;
        } 
 
 
+            sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId");
+            receiveMessagePacket receptionState(senderId,nodeId,"received");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
 
         uint8_t type=extractBytesFromField(message,"type");
         if(type!=common::type[0]){
