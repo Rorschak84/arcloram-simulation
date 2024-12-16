@@ -27,6 +27,9 @@ void SimulationManager::startSimulation() {
         Log initialNodeLog(node->initMessage(), true);
         logger.logMessage(initialNodeLog);
     }
+
+
+
 }
 
 void SimulationManager::stopSimulation() {

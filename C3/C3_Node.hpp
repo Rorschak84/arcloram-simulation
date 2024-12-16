@@ -12,7 +12,7 @@ public :
             setInitialState(NodeState::Sleeping);
     };
 
-    int getClassId() const  {
+    int getClassId() const override {
         return 3;
     }
     std::string initMessage() const override;

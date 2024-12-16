@@ -365,6 +365,8 @@ bool C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
         logger.sendTcpPacket(statePacketReceiver);
 
         if(shouldReplyACK){
+            std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime));
+
             std::vector<uint8_t> ackPacket;
 
             //preallocate the space for optimization
@@ -372,14 +374,12 @@ bool C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
                             common::senderGlobalIdBytesSize+
                             common::receiverGlobalIdBytesSize+
                             common::localIDPacketBytesSize+
-                            common::payloadSizeBytesSize+
                             common::hashFunctionBytesSize);
 
            //prepare the fields:
                std::vector<uint8_t> senderGlobalId = decimalToBytes(nodeId,common::senderGlobalIdBytesSize); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
                 std::vector<uint8_t> receiverGlobalId = decimalToBytes(lastSenderId,common::receiverGlobalIdBytesSize); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
                 std::vector<uint8_t> localIDPacket = decimalToBytes(lastLocalIDPacket,common::localIDPacketBytesSize); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
-                std::vector<uint8_t> payload = {0xFF,0xFF,0xFF,0xFF}; //Payload Size is 4 byte long in the simulation, 40 Bytes max in real life
                 std::vector<uint8_t> hashFunction = {0x00,0x00,0x00,0x00}; //Hash Function is 4 byte long in the simulation AND in real life
     
                 // Append all fields
@@ -387,7 +387,6 @@ bool C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
                 appendVector(ackPacket, senderGlobalId);
                 appendVector(ackPacket, receiverGlobalId);
                 appendVector(ackPacket, localIDPacket);
-                appendVector(ackPacket, payload);
                 appendVector(ackPacket, hashFunction);
     
                 addMessageToTransmit(ackPacket,std::chrono::milliseconds(common::timeOnAirAckPacket));

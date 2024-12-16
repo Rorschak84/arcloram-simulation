@@ -21,12 +21,15 @@ public :
             initializeTransitionMap();
             setInitialState(NodeState::Sleeping);
 
+            //decide which slots among the DATA communicating slots will actually be used to transmit information
+            transmissionSlots=selectRandomSlots(common::maxNodeSlots,common::totalNumberOfSlots);
+            nbPayloadLeft=initialnbPaylaod;
     };
 
 #else
     #error "Unknown COMMUNICATION_PERIOD mode"
 #endif
-    int getClassId() const  {
+    int getClassId() const override {
         return 2;
     }
     
@@ -85,16 +88,24 @@ public :
         bool isTransmittingWhileCommunicating=false;
 
     #elif COMMUNICATION_PERIOD== RRC_UPLINK
+
+        //visualiser
+        void displayRouting();// we cannot put this in the constructor as we need to wait for the visualiser to receive all the nodes
+        bool routingDisplayed=false;
+
         //Reception
         bool canNodeReceiveMessage();
         bool isTransmittingWhileCommunicating=false;
-        bool isDataWindow=false;
 
         //Variables that should have been provided during beacon phase
         uint16_t nextNodeIdInPath;
         uint8_t hopCount;
 
         //Data Strategy
+        bool isOddSlot=false;
+        bool isACKSlot=true;
+        unsigned int localIDPacketCounter=0;
+        
         std::vector<int> transmissionSlots; //the slots where the node WILL transmit (unless if no data to send), it's fixed
         uint8_t nbPayloadLeft; //the number of payload left to send(initial + forward packet)(represents the data that will be sent, in the simulation, every payload is the same (0xFF...FF)) 
         uint8_t initialnbPaylaod=2; //initial number of payload

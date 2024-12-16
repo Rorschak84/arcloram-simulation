@@ -77,6 +77,7 @@ public:
     }
 
     void onTimeChange(WindowNodeState proposedState);
+     virtual  int getClassId() const =0;
 
 protected:
 
@@ -130,6 +131,7 @@ protected:
    
     static std::string stateToString(NodeState state);
     static std::string stateToString(WindowNodeState state);
+
 
     //we need to define in child classes the state machine
     //convention for the name of the methods:

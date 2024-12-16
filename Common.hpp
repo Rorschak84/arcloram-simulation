@@ -193,13 +193,13 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 #elif COMMUNICATION_PERIOD == RRC_UPLINK
 
     constexpr const char* communicationMode = "RRC_Uplink";
-    constexpr  const  unsigned int durationSleepWindowMain = 1500;      //ms 
-    constexpr  const unsigned int durationDataWindow = 1000; //ms
-    constexpr  const unsigned int durationSleepWindowSecondary = 200; //ms
-    constexpr  const unsigned int durationACKWindow = 800; //ms
+    constexpr  const  unsigned int durationSleepWindowMain = 2000;      //ms 
+    constexpr  const unsigned int durationDataWindow = 1500; //ms
+    constexpr  const unsigned int durationSleepWindowSecondary = 800; //ms
+    constexpr  const unsigned int durationACKWindow = 1200; //ms
 
     //these variables are adapted for representativity. If we were adopting the ones that duty cycle entails us to take, would be different
-    constexpr const int totalNumberOfSlots=300; //150 for odd, 150 for even
+    constexpr const int totalNumberOfSlots=150; //half for odd, half for even
     constexpr const int maxNodeSlots=15; //the maximum number of slots a node can transmit
     constexpr const int guardTime=50; //a sufficient guard time is needed to be sure every nodes that should are able to receive messages
     constexpr const int typePacket=0x03;
