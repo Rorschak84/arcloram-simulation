@@ -1,4 +1,0 @@
-Node 0 located at (0,0)Class: 3 started to run
-Node 0 located at (0,0)Class: 3 started to run
-Node 0 located at (0,0)Class: 3 started to run
-Node 0 located at (0,0)Class: 3 started to run

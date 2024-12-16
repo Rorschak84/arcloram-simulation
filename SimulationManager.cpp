@@ -137,9 +137,7 @@ void SimulationManager::ProcessMessages(){
                 // Log hasValue("Node "+std::to_string(node->getId())+" msg is processed", true);
                 //  logger.logMessage(hasValue);
                 for ( auto& reachableNode : reachableNodesPerNode[node->getId()]) {
-                    
-                    // //maybe launch a thread in detach mode here
-                    // reachableNode->receiveMessage(message->first, message->second);
+
                     // Launch a thread in detached mode
                     std::thread([reachableNode,message]() {
                         reachableNode->receiveMessage(message->first,message->second);

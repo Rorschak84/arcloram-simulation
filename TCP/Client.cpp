@@ -1,10 +1,14 @@
 #include "Client.hpp"
 #include <thread>
 #include <chrono>
+#include "../Common.hpp"
 
 Client::Client(const std::string& serverIp, unsigned short serverPort)
     : isConnected(false) {
-
+    if(!common::visualiserConnected){
+        std::cout << "****** No Visualiser Mode ******\n";
+        return;
+    }
     // Attempt to connect to the server
     if (socket.connect(serverIp, serverPort) != sf::Socket::Done) {
         std::cerr << "******Error connecting to server******\n";

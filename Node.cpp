@@ -180,9 +180,15 @@ bool Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
                 else{
                 //THE BUFFER IS DEPRECATED, WE DON'T NEED IT ANYMORE TODO
                     std::lock_guard<std::mutex> lock(receiveMutex);
-                    receiveBuffer.push(message); 
-                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message), true);
+                    // receiveBuffer.push(message); 
+                    #if COMMUNICATION_PERIOD == RRC_BEACON || COMMUNICATION_PERIOD == RRC_DOWNLINK
+                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message,common::fieldMap), true);
                     logger.logMessage(receivedLog); 
+                    #elif COMMUNICATION_PERIOD == RRC_UPLINK
+                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message,common::dataFieldMap), true);
+                    logger.logMessage(receivedLog);
+                    #endif
+                    
                     isReceiving=false;
                     return true;
                 }
@@ -217,17 +223,18 @@ bool Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
   
 }
 
-std::optional<std::vector<uint8_t>> Node::getNextReceivedMessage() { //optionnal is a way to return a value or nothing
-    std::lock_guard<std::mutex> lock(receiveMutex);
-    if (receiveBuffer.empty()) {
-        return std::nullopt; //return nothing
-    }
-    std::vector<uint8_t> message = receiveBuffer.front();
+// std::optional<std::vector<uint8_t>> Node::getNextReceivedMessage() { //optionnal is a way to return a value or nothing
     
-    //change in order to implement node behavior
-    receiveBuffer.pop();
-    return message;
-}
+//     std::lock_guard<std::mutex> lock(receiveMutex);
+//     if (receiveBuffer.empty()) {
+//         return std::nullopt; //return nothing
+//     }
+//     std::vector<uint8_t> message = receiveBuffer.front();
+
+//     //change in order to implement node behavior
+//     receiveBuffer.pop();
+//     return message;
+// }
 
 void Node::addMessageToTransmit(const std::vector<uint8_t> message,std::chrono::milliseconds timeOnAir) {
     {       //we add the msg to the buffer, but we need to lock the buffer before
@@ -236,8 +243,10 @@ void Node::addMessageToTransmit(const std::vector<uint8_t> message,std::chrono::
     }
 
     {
-  Log queuedLog("Node "+std::to_string(nodeId)+" queued "+detailedBytesToString( message), true);
-  logger.logMessage(queuedLog);
+    #if COMMUNICATION_PERIOD == RRC_BEACON || COMMUNICATION_PERIOD == RRC_DOWNLINK
+    Log queuedLog("Node "+std::to_string(nodeId)+" queued "+detailedBytesToString( message,common::fieldMap), true);
+    logger.logMessage(queuedLog);
+    #endif
    //std::lock_guard<std::mutex> lockNode(dispatchCvMutex); // Lock the shared mutex for condition variable signaling
     // Notify that a new message is ready
     dispatchCv.notify_one();//notify the simulation manager that a message is ready        

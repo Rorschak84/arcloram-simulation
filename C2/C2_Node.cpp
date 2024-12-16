@@ -29,14 +29,21 @@
         return true;
     }
 
+    void C2_Node::addPacket(SenderID sender, PacketID packet)
+    {
+        
+        packetsMap[sender].push_back(packet);
+
+    }
+
     bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
     {
         if(!canNodeReceiveMessage()){
              Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
              logger.logMessage(notlisteninglog);
 
-             sf::Packet receptionStatePacketReceiver;
-            uint16_t senderId=extractBytesFromField(message,"senderGlobalId");
+            sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
             receiveMessagePacket receptionState(senderId,nodeId,"notListening");
             receptionStatePacketReceiver<<receptionState;
             logger.sendTcpPacket(receptionStatePacketReceiver);
@@ -48,7 +55,7 @@
             //an interference happened, we don't treat the message
             
             sf::Packet receptionStatePacketReceiver;
-            uint16_t senderId=extractBytesFromField(message,"senderGlobalId");
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
             receiveMessagePacket receptionState(senderId,nodeId,"interference");
             receptionStatePacketReceiver<<receptionState;
             logger.sendTcpPacket(receptionStatePacketReceiver);
@@ -58,26 +65,26 @@
 
 
             sf::Packet receptionStatePacketReceiver;
-            uint16_t senderId=extractBytesFromField(message,"senderGlobalId");
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
             receiveMessagePacket receptionState(senderId,nodeId,"received");
             receptionStatePacketReceiver<<receptionState;
             logger.sendTcpPacket(receptionStatePacketReceiver);
 
-        uint8_t type=extractBytesFromField(message,"type");
+        uint8_t type=extractBytesFromField(message,"type",common::fieldMap);
         if(type!=common::type[0]){
             //not a beacon, we don't care
             Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
             logger.logMessage(wrongTypeLog);
-            receiveBuffer.pop();
+            // receiveBuffer.pop();
             return false;
         }
 
 
-        uint8_t packetHopCount=extractBytesFromField(message,"hopCount");
-        uint32_t packetTimeStamp=extractBytesFromField(message,"timeStamp");
-        uint16_t packetGlobalIDPacket=extractBytesFromField(message,"globalIDPacket");
-        uint8_t packetPathCost=extractBytesFromField(message,"costFunction");
-        uint16_t packetNextNodeIdInPath=extractBytesFromField(message,"senderGlobalId");
+        uint8_t packetHopCount=extractBytesFromField(message,"hopCount",common::fieldMap);
+        uint32_t packetTimeStamp=extractBytesFromField(message,"timeStamp",common::fieldMap);
+        uint16_t packetGlobalIDPacket=extractBytesFromField(message,"globalIDPacket",common::fieldMap);
+        uint8_t packetPathCost=extractBytesFromField(message,"costFunction",common::fieldMap);
+        uint16_t packetNextNodeIdInPath=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
 
         // //TODO: remove the buffer?? maybe it's just used by the simulation manager
         // receiveBuffer.pop();//we don't care about the other messages
@@ -191,7 +198,7 @@
         if(shouldSendBeacon&&beaconSlots.size()==0){
             //a "new" beacon has just been received, we plan the random slots
             shouldSendBeacon=false;
-            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets(common::minimumNbBeaconPackets,common::maximumNbBeaconPackets),common::nbSlotsPossibleForOneBeacon);
             std::ostringstream oss;
             for (size_t i = 0; i < beaconSlots.size(); ++i) {
                 oss << beaconSlots[i];
@@ -290,32 +297,52 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
         if(!canNodeReceiveMessage()){
              Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
              logger.logMessage(notlisteninglog);
+
+
+             sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
+            receiveMessagePacket receptionState(senderId,nodeId,"notListening");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
+
             return false;
         }
 
        if(!Node::receiveMessage(message, timeOnAir)){
             //an interference happened, we don't treat the message
-            //TODO: put the logs here?
+            sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
+            receiveMessagePacket receptionState(senderId,nodeId,"interference");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
+
+
+
             return false;
        } 
 
 
 
-        uint8_t type=extractBytesFromField(message,"type");
+        uint8_t type=extractBytesFromField(message,"type",common::fieldMap);
         if(type!=common::type[0]){
             //not a beacon, we don't care
             Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
             logger.logMessage(wrongTypeLog);
-            receiveBuffer.pop();
+            // receiveBuffer.pop();
             return false;
         }
 
+        sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
+            receiveMessagePacket receptionState(senderId,nodeId,"received");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
 
-        uint8_t packetSenderId=extractBytesFromField(message,"senderGlobalId");
-        uint32_t packetReceiverId=extractBytesFromField(message,"receiverGlobalId");
-        uint16_t packetGlobalIDPacket=extractBytesFromField(message,"globalIDPacket");
-        uint8_t packetPayload=extractBytesFromField(message,"payload");
-        uint8_t packetHashFunction=extractBytesFromField(message,"hashFunction");
+        uint8_t packetSenderId=extractBytesFromField(message,"senderGlobalId",common::fieldMap);
+        uint32_t packetReceiverId=extractBytesFromField(message,"receiverGlobalId",common::fieldMap);
+        uint16_t packetGlobalIDPacket=extractBytesFromField(message,"globalIDPacket",common::fieldMap);
+        uint8_t packetPayload=extractBytesFromField(message,"payload",common::fieldMap);
+        uint8_t packetHashFunction=extractBytesFromField(message,"hashFunction",common::fieldMap);
         // //TODO: remove the buffer?? maybe it's just used by the simulation manager
         // receiveBuffer.pop();//we don't care about the other messages
         // //actually, we don't really care about the receiving buffer, since each message is treated as soon as it is received.
@@ -324,6 +351,8 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
             //THe packet is for us!
             Log finalReceiverLog("Node "+std::to_string(nodeId)+" received a packet for him", true);
             logger.logMessage(finalReceiverLog);
+            //TODO: make clear in the visualiser that there is something hapenning?
+            //woud be nice you reuse what you implemented, and don't make another packet
 
             //maybe put something to signify in the visualiser that It Works TODO
             return true;
@@ -369,7 +398,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
         if(shouldSendBeacon&&beaconSlots.size()==0){
             //a "new" beacon has just been received, we plan the random slots
             shouldSendBeacon=false;
-            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets(common::minimumNbBeaconPackets,common::maximumNbBeaconPackets),common::nbSlotsPossibleForOneBeacon);
             std::ostringstream oss;
             for (size_t i = 0; i < beaconSlots.size(); ++i) {
                 oss << beaconSlots[i];
@@ -454,6 +483,57 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
         return true;
     }    
     //Unauthorized transition in this mode.
+    bool C2_Node::canCommunicateFromTransmitting() { return false; }
+    bool C2_Node::canCommunicateFromListening() { return false; }
+    bool C2_Node::canCommunicateFromCommunicating() { return true; }
+    bool C2_Node::canTransmitFromListening() { return true; }
+    bool C2_Node::canTransmitFromSleeping() {return true; }
+    bool C2_Node::canTransmitFromTransmitting() { return true; }
+    bool C2_Node::canTransmitFromCommunicating(){return false;}
+    bool C2_Node::canListenFromTransmitting() { return true; }
+    bool C2_Node::canListenFromSleeping() {return false;}
+    bool C2_Node::canListenFromListening() { return false; }
+    bool C2_Node::canListenFromCommunicating(){return false;}
+    bool C2_Node::canSleepFromTransmitting() { return false; }
+    bool C2_Node::canSleepFromListening() { return false; }
+    bool C2_Node::canSleepFromSleeping() { return false; }
+
+#elif COMMUNICATION_PERIOD == RRC_UPLINK
+
+bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir){
+    return true;
+}
+
+
+    bool C2_Node::canCommunicateFromSleeping(){
+
+        currentState=NodeState::Communicating;
+
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Communicate");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
+        //is it a ACK window or a data window?
+        if(!isDataWindow){
+            isDataWindow=true;//we switch to the data window
+            
+        }
+
+        return true;
+    }
+    bool C2_Node::canSleepFromCommunicating(){
+
+        currentState=NodeState::Sleeping;
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+        return true;
+    }
+
+
+        //Unauthorized transition in this mode.
     bool C2_Node::canCommunicateFromTransmitting() { return false; }
     bool C2_Node::canCommunicateFromListening() { return false; }
     bool C2_Node::canCommunicateFromCommunicating() { return true; }

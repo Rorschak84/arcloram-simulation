@@ -88,11 +88,11 @@ std::string bytesToBinaryString(const std::vector<uint8_t>& packet) {
 // Function to extract a field's value
 //IF we need to process the Payload with this, since it can be 40 bytes maximum, we need to use a uint64_t (or maybe higher?)
 //unless we don't want to print the payload
-uint32_t extractBytesFromField(const std::vector<uint8_t>& packet, const std::string& fieldName) {
+uint32_t extractBytesFromField(const std::vector<uint8_t>& packet, const std::string& fieldName,const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap) {
     // Check if the field name exists in the map
     
-    auto it = common::fieldMap.find(fieldName);
-    if (it == common::fieldMap.end()) {
+    auto it = fieldMap.find(fieldName);
+    if (it == fieldMap.end()) {
         throw std::invalid_argument("Field name not recognized: " + fieldName);
     }
 
@@ -115,7 +115,7 @@ uint32_t extractBytesFromField(const std::vector<uint8_t>& packet, const std::st
 }
 
 // Function to convert a packet of bytes to a space-separated decimal string
-std::string bytesToDecimal(const std::vector<uint8_t>& packet) {
+std::string bytesToDecimalString(const std::vector<uint8_t>& packet) {
     std::ostringstream oss;
     for (auto byte : packet) {
         oss << static_cast<int>(byte) << " "; // Convert each byte to decimal
@@ -142,11 +142,11 @@ std::vector<uint8_t> decimalToBytes(uint32_t decimalValue, size_t byteCount) {
 
 
 // Function to generate the detailed string representation of the packet
-std::string detailedBytesToString(const std::vector<uint8_t>& packet) {
+std::string detailedBytesToString(const std::vector<uint8_t>& packet , const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap) {
     std::ostringstream oss;
      // Collect keys in reverse order
     std::vector<std::string> fieldNames;
-    for (const auto& [fieldName, fieldInfo] : common::fieldMap) {
+    for (const auto& [fieldName, fieldInfo] : fieldMap) {
         fieldNames.push_back(fieldName);
     }
 
@@ -155,7 +155,7 @@ std::string detailedBytesToString(const std::vector<uint8_t>& packet) {
 
     // Process the fields in reverse order
     for (const auto& fieldName : fieldNames) {
-        uint32_t value = extractBytesFromField(packet, fieldName);
+        uint32_t value = extractBytesFromField(packet, fieldName, fieldMap);
         oss << fieldName << ": " << value << " - ";
     }
 
@@ -194,7 +194,7 @@ void add_bit_to_packet(std::vector<uint8_t>& packet, bool bit) {
     }
 }
 
-std::string bytesToHex(const std::vector<uint8_t>& packet) {
+std::string bytesToHexString(const std::vector<uint8_t>& packet) {
     std::ostringstream oss;
     for (auto byte : packet) {
         // Convert each byte to a two-digit hexadecimal number

@@ -57,7 +57,7 @@ public:
     //add a message to the receiving buffer if no interference is detected, additionnal behaviour can be added in child classes
     virtual bool receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir);
     std::optional<std::pair<std::vector<uint8_t>,std::chrono::milliseconds>> getNextTransmittingMessage(); // Method to retrieve a message from the transmitting buffer
-    std::optional<std::vector<uint8_t>> getNextReceivedMessage();// .... from the receiving buffer
+    // std::optional<std::vector<uint8_t>> getNextReceivedMessage();// .... from the receiving buffer
     bool hasNextTransmittingMessage() ;//this is called by the transmission loop
 
     //getters
@@ -87,7 +87,7 @@ protected:
     Logger& logger;
 
     // Buffers for receiving and transmitting messages
-    std::queue<std::vector<uint8_t>> receiveBuffer;
+    // std::queue<std::vector<uint8_t>> receiveBuffer;
     std::queue<std::pair<std::vector<uint8_t>,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
  
     //to simulate interferences:

@@ -1,9 +1,0 @@
-
-
-
-Nodes emits messages when their statetransition callback function is called.
-This is the entry point for the transmition logic.
-
-However, Node receives packets when their receiveBuffer something.
-Consequently, there should be a thread that waits for a the buffer to be populated before looking for logic.
-

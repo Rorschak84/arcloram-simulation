@@ -17,26 +17,36 @@ std::vector<std::shared_ptr<Node>> Seed::transferOwnership() {
 void Seed::initializeNodes()
     {
         std::string use_case= communicationWindow +"_"+ topology;
+        
+    #if COMMUNICATION_PERIOD == RRC_DOWNLINK || COMMUNICATION_PERIOD == RRC_BEACON
 
         if(use_case=="RRC_Beacon_Line"){
-            initialize_RRC_Beacon_Line();
+                initialize_RRC_Beacon_Line();
+          
         }
         else if (use_case=="RRC_Beacon_Mesh"){
-            initialize_RRC_Beacon_Mesh();
+                initialize_RRC_Beacon_Mesh();
+            
         }
         else if (use_case=="RRC_Downlink_Line"){
-            initialize_RRC_Downlink_Line();
+                initialize_RRC_Downlink_Line();
+            
         }      
         else if (use_case=="RRC_Downlink_Mesh"){
-            initialize_RRC_Beacon_Mesh(); //Provisionning is the same, TDMA may differ, if protocol is fully implemented
+                initialize_RRC_Beacon_Mesh(); //Provisionning is the same, TDMA may differ, if protocol is fully implemented
         }
+    #elif COMMUNICATION_PERIOD == RRC_UPLINK
+    if(use_case=="RRC_Uplink_Mesh"){
+        initialize_RRC_Uplink_Mesh();
+    }
+    else if(use_case=="RRC_Uplink_Line"){
+        initialize_RRC_Uplink_Line();
+    }
+     #endif
 
-        //for other uses cases, you will probably have to create additional constructors for C3, C2.. to provision the element 
-        else{
-            throw std::invalid_argument("The use case is not implemented");
-        }
     }
 
+#if COMMUNICATION_PERIOD == RRC_DOWNLINK || COMMUNICATION_PERIOD == RRC_BEACON
 
 void Seed::initialize_RRC_Beacon_Mesh(){
         /*                 -- C2--              
@@ -143,7 +153,6 @@ void Seed::initialize_RRC_Downlink_Line(){
         for (size_t i = 0; i <common:: nbComWindows; i++)
         {   
             firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+i*common::lengthTransmissionWindow, WindowNodeState::CanTransmit); //the C3 is only transmitting in this mode
-        
             firstNode->addActivation(baseTime+(i+1)*common::lengthSleepingWindow+(i+1)*common::lengthTransmissionWindow, WindowNodeState::CanSleep);
         }
         
@@ -164,3 +173,76 @@ void Seed::initialize_RRC_Downlink_Line(){
 
 
 }
+#elif COMMUNICATION_PERIOD == RRC_UPLINK
+void Seed::initialize_RRC_Uplink_Mesh()
+{
+           /*              -- C2--              
+                       ---        ---
+                 ---C2-----------------C2
+                ---        ---      ---
+            C3                --C2-- 
+              ---          ---     --       
+                 ---C2---            --C2
+
+        *                 ----4 ----              
+                       ---        ---
+                 --- 1----------------- 5
+                ---       ---      ---
+             0               -- 3-- 
+              ---         ---     --       
+                 --- 2---            -- 6         
+
+            Odd:1,2,5,6
+            Even:3,4
+        */
+
+
+
+}
+void Seed::initialize_RRC_Uplink_Line()
+{
+        /*
+        
+            C3 --------  C2 -------- C2 -------- C2 -------- C2
+
+        */
+
+        //create a C3 node
+        //Pattern: Sleep - Listen(Data) - Transmit(ACK) - Sleep (sleep during even slots) 
+
+        std::pair<int, int> coordinates = std::make_pair(0, 0);
+        auto firstNode = std::make_shared<C3_Node>(0, logger, coordinates,dispatchCv,dispatchCvMutex);
+
+        for (size_t i = 0; i <common:: totalNumberOfSlots; i++)
+        {   //initially sleep
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+i*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanListen); 
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanSleep); 
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanTransmit); 
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +(i+1)*common::durationACKWindow, WindowNodeState::CanSleep); 
+
+        }
+    
+        listNode.push_back(firstNode);
+
+         // Create C2 nodes in a line
+         int hopCount=1;
+        for(int i = 1; i<5; i++){
+            std::pair<int, int> coordinate = std::make_pair(800*i, 0);
+
+            //Second COnstructor for C2 (as if Beacon Mode has already provided necessary information)
+            auto node = std::make_shared<C2_Node>(i, logger, coordinate,dispatchCv,dispatchCvMutex,i-1,hopCount); // Create a smart pointer
+            hopCount++;
+            for (size_t i = 0; i < common::totalNumberOfSlots; i++)
+            {   
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+i*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanCommunicate); 
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanSleep); 
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanCommunicate); 
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +(i+1)*common::durationACKWindow, WindowNodeState::CanSleep); 
+
+           }
+            listNode.push_back(node);
+        }
+
+        
+}
+#endif

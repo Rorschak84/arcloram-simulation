@@ -39,7 +39,16 @@ private:
     int64_t  baseTime;
 
     void initializeNodes();
+
+
+    #if COMMUNICATION_PERIOD == RRC_DOWNLINK || COMMUNICATION_PERIOD == RRC_BEACON
+
+    void initialize_RRC_Downlink_Line();
     void initialize_RRC_Beacon_Line();
     void initialize_RRC_Beacon_Mesh();
-    void initialize_RRC_Downlink_Line();
+    #elif COMMUNICATION_PERIOD == RRC_UPLINK
+
+    void initialize_RRC_Uplink_Mesh();
+    void initialize_RRC_Uplink_Line();
+    #endif
 };

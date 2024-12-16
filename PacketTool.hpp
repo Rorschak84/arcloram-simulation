@@ -13,7 +13,7 @@ std::vector<uint8_t> getTimeStamp();
 
 std::string bytesToBinaryString(const std::vector<uint8_t>& packet);
 
-uint32_t extractBytesFromField(const std::vector<uint8_t>& packet, const std::string& fieldName);
+uint32_t extractBytesFromField(const std::vector<uint8_t>& packet, const std::string& fieldName,const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap);
 
 
 std::string bytesToDecimalString(const std::vector<uint8_t>& packet);
@@ -21,7 +21,7 @@ std::string bytesToDecimalString(const std::vector<uint8_t>& packet);
 
 std::vector<uint8_t> decimalToBytes(uint32_t decimalValue, size_t byteCount);
 
-std::string detailedBytesToString(const std::vector<uint8_t>& packet);
+std::string detailedBytesToString(const std::vector<uint8_t>& packet, const std::unordered_map<std::string, std::pair<size_t, size_t>> fieldMap);
 
 std::string bytesToHexString(const std::vector<uint8_t>& packet) ;
 
@@ -40,21 +40,21 @@ inline auto appendVector = [](std::vector<uint8_t>& dest, const std::vector<uint
 //----------------UTILITIES FOR RANDOMNESS-----------------
 
 
-inline int computeRandomNbBeaconPackets() {
+inline int computeRandomNbBeaconPackets(int min, int max) {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(common::minimumNbBeaconPackets, common::maximumNbBeaconPackets);
+        std::uniform_int_distribution<> dis(min, max);
         return dis(gen);
     }
 
 
 
 
-inline  std::vector<int> selectRandomSlots(int m) {
+inline  std::vector<int> selectRandomSlots(int m , int nbSlotsPossible) {
     
         // Step 1: Create a vector of slots [0, 1, ..., n-1]
-        std::vector<int> slots(common::nbSlotsPossibleForOneBeacon);
-        for (int i = 0; i < common::nbSlotsPossibleForOneBeacon; ++i) {
+        std::vector<int> slots(nbSlotsPossible);
+        for (int i = 0; i < nbSlotsPossible; ++i) {
             slots[i] = i;
         }
 

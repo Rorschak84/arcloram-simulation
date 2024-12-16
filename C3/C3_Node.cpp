@@ -43,7 +43,7 @@ std::string C3_Node::initMessage() const{
         }
         else if(beaconSlots.size()==0 &&shouldSendBeacon){// we compute the randomness of slots (see the thesis report)
             shouldSendBeacon=false;
-            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets(common::minimumNbBeaconPackets,common::maximumNbBeaconPackets),common::nbSlotsPossibleForOneBeacon);
         }
 
         if(beaconSlots[0]==0){
@@ -161,7 +161,7 @@ std::string C3_Node::initMessage() const{
         }
         else if(beaconSlots.size()==0 &&shouldSendBeacon){// we compute the randomness of slots (see the thesis report)
             shouldSendBeacon=false;
-            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets());
+            beaconSlots=selectRandomSlots(computeRandomNbBeaconPackets(common::minimumNbBeaconPackets,common::maximumNbBeaconPackets),common::nbSlotsPossibleForOneBeacon);
         }
 
         if(beaconSlots[0]==0){
@@ -253,6 +253,167 @@ std::string C3_Node::initMessage() const{
     bool C3_Node::canCommunicateFromSleeping(){return false;}
     bool C3_Node::canCommunicateFromCommunicating(){return false;}
 
+#elif COMMUNICATION_PERIOD== RRC_UPLINK
+
+bool C3_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir){
+
+
+        //Node must listen/communicate and not ransmit  to receive a message
+        if(!canNodeReceiveMessage()){
+             Log notlisteninglog("Node "+std::to_string(nodeId)+" not listening, dropped msg"/*+detailedBytesToString( message)*/, true);
+             logger.logMessage(notlisteninglog);
+
+            sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::dataFieldMap);
+            receiveMessagePacket receptionState(senderId,nodeId,"notListening");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
+
+            return false;
+        }
+        //there should be no interference
+        else if(!Node::receiveMessage(message, timeOnAir)){
+            //an interference happened, we don't treat the message
+            
+            sf::Packet receptionStatePacketReceiver;
+            uint16_t senderId=extractBytesFromField(message,"senderGlobalId",common::dataFieldMap);
+            receiveMessagePacket receptionState(senderId,nodeId,"interference");
+            receptionStatePacketReceiver<<receptionState;
+            logger.sendTcpPacket(receptionStatePacketReceiver);
+
+            return false;
+       } 
+
+    //the node is able to decrypt the packet, but is it a data packet?
+    if(message[0]!=common::typeData[0]){
+        //not a data packet, we don't care
+        Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
+        logger.logMessage(wrongTypeLog);
+        return false;
+    }
+
+    //We received a data packet, if it's relevant for us, we should send an ack
+    uint16_t receiverId=extractBytesFromField(message,"receiverGlobalId",common::dataFieldMap);
+    if(receiverId!=nodeId){
+        //not for us, we don't care
+        Log wrongReceiverLog("Node "+std::to_string(nodeId)+" received a packet not for him, dropping", true);
+        logger.logMessage(wrongReceiverLog);
+        return false;
+    }
+    //we received a packet for us, we should send an ack no matter what happened before (ack can be lost)
+    shouldReplyACK=true;
+    
+    //we should store the packets id in lists, but for C3 it doesn't make sense (unless for advanced monitoring features)
+     lastSenderId=extractBytesFromField(message,"senderGlobalId",common::dataFieldMap);
+     lastLocalIDPacket=extractBytesFromField(message,"localIDPacket",common::dataFieldMap);
+    
+    
+    //We don't really care about the payload and the hash function at this stage of development
+    //uint32_t payload=extractBytesFromField(message,"payload",common::dataFieldMap);
+    //uint32_t hashFunction=extractBytesFromField(message,"hashFunction",common::dataFieldMap);
+
+
+    return true;
+}
+    bool C3_Node::canNodeReceiveMessage() {
+        // State Condition: node must be listening to receive a message
+        if(currentState!=NodeState::Listening){
+            return false;
+        }
+        return true;
+    }
+
+    bool C3_Node::canListenFromSleeping() { 
+
+        currentState=NodeState::Listening;
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Listen");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
+
+
+        return true;
+         }
+
+    bool C3_Node::canSleepFromListening() { 
+
+        currentState=NodeState::Sleeping;
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+        return true; 
+        }
+
+    bool C3_Node::canSleepFromTransmitting() { 
+        currentState=NodeState::Sleeping;
+
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Sleep");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+        return true; 
+        }
+
+    bool C3_Node::canTransmitFromSleeping(){
+        
+        currentState=NodeState::Transmitting;
+        sf::Packet statePacketReceiver;
+        stateNodePacket statePacket(nodeId, "Transmit");
+        statePacketReceiver<<statePacket;
+        logger.sendTcpPacket(statePacketReceiver);
+
+        if(shouldReplyACK){
+            std::vector<uint8_t> ackPacket;
+
+            //preallocate the space for optimization
+            ackPacket.reserve(common::typeACK.size() + 
+                            common::senderGlobalIdBytesSize+
+                            common::receiverGlobalIdBytesSize+
+                            common::localIDPacketBytesSize+
+                            common::payloadSizeBytesSize+
+                            common::hashFunctionBytesSize);
+
+           //prepare the fields:
+               std::vector<uint8_t> senderGlobalId = decimalToBytes(nodeId,common::senderGlobalIdBytesSize); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+                std::vector<uint8_t> receiverGlobalId = decimalToBytes(lastSenderId,common::receiverGlobalIdBytesSize); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+                std::vector<uint8_t> localIDPacket = decimalToBytes(lastLocalIDPacket,common::localIDPacketBytesSize); //Sender Global ID is 2 byte long in the simulation, 10 bits in real life
+                std::vector<uint8_t> payload = {0xFF,0xFF,0xFF,0xFF}; //Payload Size is 4 byte long in the simulation, 40 Bytes max in real life
+                std::vector<uint8_t> hashFunction = {0x00,0x00,0x00,0x00}; //Hash Function is 4 byte long in the simulation AND in real life
+    
+                // Append all fields
+                appendVector(ackPacket, common::typeACK);
+                appendVector(ackPacket, senderGlobalId);
+                appendVector(ackPacket, receiverGlobalId);
+                appendVector(ackPacket, localIDPacket);
+                appendVector(ackPacket, payload);
+                appendVector(ackPacket, hashFunction);
+    
+                addMessageToTransmit(ackPacket,std::chrono::milliseconds(common::timeOnAirAckPacket));
+                shouldReplyACK=false;    
+
+                sf::Packet  transmitPacketReceiver;
+                transmitMessagePacket transmitPacket(nodeId,lastSenderId);
+                transmitPacketReceiver<<transmitPacket;
+                logger.sendTcpPacket(transmitPacketReceiver);
+        }
+        return true;
+        }
+
+    //Unauthorized transition in this mode.
+    bool C3_Node::canTransmitFromTransmitting() { return false; }
+    bool C3_Node::canTransmitFromCommunicating(){return false;}
+    bool C3_Node::canTransmitFromListening() { return false; }
+    bool C3_Node::canListenFromTransmitting() { return false; }
+    bool C3_Node::canListenFromListening() { return false; }
+    bool C3_Node::canListenFromCommunicating(){return false;}
+    bool C3_Node::canSleepFromSleeping() { return false; }
+    bool C3_Node::canSleepFromCommunicating(){return false;}
+    bool C3_Node::canCommunicateFromTransmitting(){return false;}
+    bool C3_Node::canCommunicateFromListening(){return false;}
+    bool C3_Node::canCommunicateFromSleeping(){return false;}
+    bool C3_Node::canCommunicateFromCommunicating(){return false;}
 
 #else
     #error "Unknown COMMUNICATION_PERIOD mode"

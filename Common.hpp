@@ -20,7 +20,7 @@
 
 /*
  ------------------------------------USE CASES-----------------------------------
-There is two major components:
+There are two major components:
 -the topology (position of nodes)
 -the Communication Window (Ex: RRC_Beacon, RRC_Downlink, ENC_Beacon), that will dictate the classes of nodes
 
@@ -53,10 +53,9 @@ If time allows, we will consider an hybrid use case that will combine the two pr
 
 
 //-----------------------------------------GENERAL PARAMETERS-----------------------------------------
-constexpr const int tickIntervalForClock_ms=150; // The tick interval should be at most equal to the minimum duration of all the windows, divided by 4/5, otherwise unpredictable behavior may occur
+constexpr const int tickIntervalForClock_ms=150; // The tick interval should be at most equal to the minimum duration of all the windows, preferably greater otherwise unpredictable behavior may occur
 constexpr const int baseTimeOffset=1000; //the base time offset allows the system to initialize before the TDMA begins
 constexpr const double distanceThreshold=1000; //the distance threshold for the PHY layer
-
 constexpr const bool visualiserConnected=true;//set false if you don't want to display the protocol
 
 //-----------------------------------------Communication Mode and  Topology-----------------------------------------
@@ -68,11 +67,11 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 
 //-----------------------------------------COMMUNICATION MODE-----------------------------------------
-#define COMMUNICATION_PERIOD 1
+#define COMMUNICATION_PERIOD 3
 
 #define RRC_BEACON 1  
 #define RRC_DOWNLINK 2
-#define RRC_UPLINK 3    //not implemented
+#define RRC_UPLINK 3    
 #define ENC_BEACON 11   //not implemented
 #define ENC_DOWNLINK 12 //not implemented
 #define ENC_UPLINK 13   //not implemented
@@ -80,7 +79,7 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 //-----------------------------------------TOPOLOGY-----------------------------------------
 
-#define TOPOLOGY 3
+#define TOPOLOGY 1
 #define LINE 1
 #define STAR 2 //not implemented
 #define MESH 3
@@ -114,8 +113,8 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 
     //For the Time Division Multiple Access Scheme in Seed
-    constexpr  const unsigned int lengthTransmissionWindow = 500;
-    constexpr  const  unsigned int lengthSleepingWindow = 1000;
+    constexpr  const unsigned int lengthTransmissionWindow = 1000;
+    constexpr  const  unsigned int lengthSleepingWindow = 1500;
     constexpr  const  unsigned int nbComWindows =40;
 
     constexpr const int typeBytesSize=1;
@@ -154,8 +153,8 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
     constexpr const int timeOnAirBeacon=70;//This should be quite high. Indeed, we don't have transmit from every nodes, and then receives for every paclets for every nodes, by having a great TOA we bypass this limitation TODO: change this to have a more resilient simulation 
     
     //For the Time Division Multiple Access Scheme in Seed
-    constexpr  const unsigned int lengthTransmissionWindow = 500;
-    constexpr  const  unsigned int lengthSleepingWindow = 1000;
+    constexpr  const unsigned int lengthTransmissionWindow = 1000;
+    constexpr  const  unsigned int lengthSleepingWindow = 1500;
     constexpr  const  unsigned int nbComWindows =40;
 
 
@@ -190,6 +189,61 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
     //static fields for this mode
     inline  const std::vector<uint8_t> type = {0x01}; // Type is 1 byte long in the simulation, 3 bits in real life
 
+
+#elif COMMUNICATION_PERIOD == RRC_UPLINK
+
+    constexpr const char* communicationMode = "RRC_Uplink";
+    constexpr  const  unsigned int durationSleepWindowMain = 1500;      //ms 
+    constexpr  const unsigned int durationDataWindow = 1000; //ms
+    constexpr  const unsigned int durationSleepWindowSecondary = 200; //ms
+    constexpr  const unsigned int durationACKWindow = 800; //ms
+
+    //these variables are adapted for representativity. If we were adopting the ones that duty cycle entails us to take, would be different
+    constexpr const int totalNumberOfSlots=300; //150 for odd, 150 for even
+    constexpr const int maxNodeSlots=15; //the maximum number of slots a node can transmit
+    constexpr const int guardTime=50; //a sufficient guard time is needed to be sure every nodes that should are able to receive messages
+    constexpr const int typePacket=0x03;
+    constexpr const int timeOnAirDataPacket=100; //ms
+    constexpr const int timeOnAirAckPacket=60; //ms
+
+
+    //TODO: change the index so it's a variable in the map
+    //Put every variables (index + nbBytes) of the fields as consexpr
+    //they are used in some function
+
+    //DATA PACKET + ACK PACKET
+    constexpr const int typeBytesSize=1;
+    constexpr const int senderGlobalIdBytesSize=2;
+    constexpr const int receiverGlobalIdBytesSize=2;
+    constexpr const int localIDPacketBytesSize=2;
+    constexpr const int payloadSizeBytesSize=4;
+    constexpr const int hashFunctionBytesSize=4;
+
+    // Format: { "field_name", {start_index, size_in_bytes} }
+    inline const std::unordered_map<std::string, std::pair<size_t, size_t>> dataFieldMap = {
+            {"type", {0, typeBytesSize}},             // "type" starts at index 0, 1 byte long
+            {"senderGlobalId", {1, senderGlobalIdBytesSize}},       // "senderGlobalId" starts at index 1, 2 bytes long
+            {"receiverGlobalId", {3, receiverGlobalIdBytesSize}},    // "receiverGlobalId" starts at index 3, 2 bytes long
+            {"localIDPacket", {5, localIDPacketBytesSize}},        // "localIDPacket" starts at index 5, 2 bytes long
+            {"payload", {7, payloadSizeBytesSize}},              // "payloadSize" starts at index 7, 4 bytes long
+            {"hashFunction", {11, hashFunctionBytesSize}}            // "hashFunction" starts at index 11, 4 bytes long
+        };
+    
+    inline const std::unordered_map<std::string, std::pair<size_t, size_t>> ackFieldMap = {
+            {"type", {0, typeBytesSize}},             // "type" starts at index 0, 1 byte long
+            {"senderGlobalId", {1, senderGlobalIdBytesSize}},       // "senderGlobalId" starts at index 1, 2 bytes long
+            {"receiverGlobalId", {3, receiverGlobalIdBytesSize}},    // "receiverGlobalId" starts at index 3, 2 bytes long
+            {"localIDPacket", {5, localIDPacketBytesSize}},        // "localIDPacket" starts at index 5, 2 bytes long
+            {"hashFunction", {7, hashFunctionBytesSize}}            // "hashFunction" starts at index 11, 4 bytes long
+        };
+    
+    
+
+
+
+    //static fields for this mode
+    inline  const std::vector<uint8_t> typeData = {0x03}; // Type is 1 byte long in the simulation, 3 bits in real life
+    inline  const std::vector<uint8_t> typeACK = {0x04}; // Type is 1 byte long in the simulation, 3 bits in real life
 
 #elif COMMUNICATION_PERIOD == ENC_BEACON
     const char* communicationMode = "ENC_Beacon";
