@@ -22,7 +22,9 @@ public :
             setInitialState(NodeState::Sleeping);
 
             //decide which slots among the DATA communicating slots will actually be used to transmit information
-            transmissionSlots=selectRandomSlots(common::maxNodeSlots,common::totalNumberOfSlots);
+            if(hopCount%2==0)transmissionSlots=selectRandomEvenSlots(common::maxNodeSlots,common::totalNumberOfSlots);
+            else  transmissionSlots=selectRandomOddSlots(common::maxNodeSlots,common::totalNumberOfSlots);
+
             nbPayloadLeft=initialnbPaylaod;
     };
 

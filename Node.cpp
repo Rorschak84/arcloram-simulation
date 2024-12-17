@@ -185,8 +185,17 @@ bool Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
                     Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message,common::fieldMap), true);
                     logger.logMessage(receivedLog); 
                     #elif COMMUNICATION_PERIOD == RRC_UPLINK
+                    if(message[0]==common::typeData[0]){//data Packet
                     Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message,common::dataFieldMap), true);
                     logger.logMessage(receivedLog);
+
+                    } 
+                    else if(message[0]==common::typeACK[0]){
+                    Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message,common::ackFieldMap), true);
+                    logger.logMessage(receivedLog);
+
+                    }
+
                     #endif
                     
                     isReceiving=false;

@@ -79,7 +79,7 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 //-----------------------------------------TOPOLOGY-----------------------------------------
 
-#define TOPOLOGY 1
+#define TOPOLOGY 3
 #define LINE 1
 #define STAR 2 //not implemented
 #define MESH 3
@@ -194,15 +194,15 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
     constexpr const char* communicationMode = "RRC_Uplink";
     constexpr  const  unsigned int durationSleepWindowMain = 2000;      //ms 
-    constexpr  const unsigned int durationDataWindow = 1500; //ms
+    constexpr  const unsigned int durationDataWindow = 900; //ms
     constexpr  const unsigned int durationSleepWindowSecondary = 800; //ms
-    constexpr  const unsigned int durationACKWindow = 1200; //ms
+    constexpr  const unsigned int durationACKWindow = 500; //ms
 
     //these variables are adapted for representativity. If we were adopting the ones that duty cycle entails us to take, would be different
-    constexpr const int totalNumberOfSlots=150; //half for odd, half for even
-    constexpr const int maxNodeSlots=15; //the maximum number of slots a node can transmit
-    constexpr const int guardTime=50; //a sufficient guard time is needed to be sure every nodes that should are able to receive messages
-    constexpr const int typePacket=0x03;
+    constexpr const int totalNumberOfSlots=50; //half for odd, half for even
+    constexpr const int maxNodeSlots=15; //the maximum number of slots a node can transmit (if one wants 100% transmission rate, should be equal to totalNumberOfSlots/2 )
+    constexpr const int guardTime=50; //ms, a sufficient guard time is needed to be sure every nodes are able to receive messages
+    // constexpr const int typePacket=0x03;
     constexpr const int timeOnAirDataPacket=100; //ms
     constexpr const int timeOnAirAckPacket=60; //ms
 

@@ -47,9 +47,6 @@ inline int computeRandomNbBeaconPackets(int min, int max) {
         return dis(gen);
     }
 
-
-
-
 inline  std::vector<int> selectRandomSlots(int m , int nbSlotsPossible) {
     
         // Step 1: Create a vector of slots [0, 1, ..., n-1]
@@ -71,3 +68,52 @@ inline  std::vector<int> selectRandomSlots(int m , int nbSlotsPossible) {
 
         return selected;
     }
+
+
+inline std::vector<int> selectRandomOddSlots(int m, int nbSlotsPossible) {
+    // Step 1: Create a vector of slots [0, 1, ..., n-1]
+    std::vector<int> slots;
+    for (int i = 0; i < nbSlotsPossible; ++i) {
+        if (i % 2 != 0) { // Only odd slots
+            slots.push_back(i);
+        }
+    }
+
+    // Step 2: Shuffle the vector randomly
+    std::random_device rd;  // Seed for random number generator
+    std::mt19937 rng(rd()); // Mersenne Twister RNG
+    std::shuffle(slots.begin(), slots.end(), rng);
+
+    // Step 3: Select the first 'm' odd slots or fewer if not enough exist
+    m = std::min(m, static_cast<int>(slots.size())); // Handle case where m > odd slots
+    std::vector<int> selected(slots.begin(), slots.begin() + m);
+
+    // Step 4: Sort the selected slots in ascending order
+    std::sort(selected.begin(), selected.end());
+
+    return selected;
+}
+
+inline std::vector<int> selectRandomEvenSlots(int m, int nbSlotsPossible) {
+    // Step 1: Create a vector of slots [0, 1, ..., n-1]
+    std::vector<int> slots;
+    for (int i = 0; i < nbSlotsPossible; ++i) {
+        if (i % 2 == 0) { // Only even slots
+            slots.push_back(i);
+        }
+    }
+
+    // Step 2: Shuffle the vector randomly
+    std::random_device rd;  // Seed for random number generator
+    std::mt19937 rng(rd()); // Mersenne Twister RNG
+    std::shuffle(slots.begin(), slots.end(), rng);
+
+    // Step 3: Select the first 'm' odd slots or fewer if not enough exist
+    m = std::min(m, static_cast<int>(slots.size())); // Handle case where m > odd slots
+    std::vector<int> selected(slots.begin(), slots.begin() + m);
+
+    // Step 4: Sort the selected slots in ascending order
+    std::sort(selected.begin(), selected.end());
+
+    return selected;
+}

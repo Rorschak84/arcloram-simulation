@@ -12,7 +12,11 @@
 
 
 
-
+struct C2_Node_Mesh_Parameter{
+    std::pair<int,int> coordinates;
+    unsigned int hopCount;
+    uint16_t nextNodeIdInPath;
+};
 
 class Seed {
 

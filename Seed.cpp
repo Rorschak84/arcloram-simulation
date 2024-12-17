@@ -196,6 +196,55 @@ void Seed::initialize_RRC_Uplink_Mesh()
             Even:3,4
         */
 
+        //create a C3 node
+        std::pair<int, int> coordinates = std::make_pair(0, 0);
+        auto firstNode = std::make_shared<C3_Node>(0, logger, coordinates,dispatchCv,dispatchCvMutex);
+
+        for (size_t i = 0; i <common:: totalNumberOfSlots; i++)
+        {   //initially sleep
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+i*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanListen); 
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanSleep); 
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanTransmit); 
+            firstNode->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +(i+1)*common::durationACKWindow, WindowNodeState::CanSleep); 
+
+        }
+        listNode.push_back(firstNode);
+
+
+            // Create C2 nodes in a mesh configuration
+        int nbC2Nodes=6;
+        std::vector<std::pair<int, int>> coordinatesC2 = {std::make_pair(600, 600), std::make_pair(600, -600), std::make_pair(1200, 0),
+        std::make_pair(1200, 1200), std::make_pair(1800, 600), std::make_pair(1800, -600)};
+
+        //the Id follows the location in the vector
+        std::vector<C2_Node_Mesh_Parameter> C2_Parameters;
+        
+        C2_Node_Mesh_Parameter node1={coordinatesC2[0],1,0};
+        C2_Parameters.push_back(node1);
+        C2_Node_Mesh_Parameter node2={coordinatesC2[1],1,0};
+        C2_Parameters.push_back(node2);                
+        C2_Node_Mesh_Parameter node3={coordinatesC2[2],2,1};
+        C2_Parameters.push_back(node3);
+        C2_Node_Mesh_Parameter node4={coordinatesC2[3],2,1};
+        C2_Parameters.push_back(node4);
+        C2_Node_Mesh_Parameter node5={coordinatesC2[4],3,4};
+        C2_Parameters.push_back(node5);
+        C2_Node_Mesh_Parameter node6={coordinatesC2[5],3,3};
+        C2_Parameters.push_back(node6);
+        for( int i = 1; i<nbC2Nodes+1; i++){
+            
+            auto node = std::make_shared<C2_Node>(i, logger, C2_Parameters[i-1].coordinates,dispatchCv,dispatchCvMutex,C2_Parameters[i-1].nextNodeIdInPath,C2_Parameters[i-1].hopCount); // Create a smart pointer
+
+            for (size_t i = 0; i < common::totalNumberOfSlots; i++)
+            {   
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+i*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanCommunicate); 
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +i*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanSleep); 
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +i*common::durationACKWindow, WindowNodeState::CanCommunicate); 
+            node->addActivation(baseTime+(i+1)*common::durationSleepWindowMain+(i+1)*common::durationDataWindow +(i+1)*common::durationSleepWindowSecondary +(i+1)*common::durationACKWindow, WindowNodeState::CanSleep); 
+
+           }
+            listNode.push_back(node);
+        }     
 
 
 }
