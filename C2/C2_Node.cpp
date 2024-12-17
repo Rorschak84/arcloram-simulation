@@ -31,12 +31,7 @@
         return true;
     }
 
-    void C2_Node::addPacket(SenderID sender, PacketID packet)
-    {
-        
-        packetsMap[sender].push_back(packet);
 
-    }
 
     bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milliseconds timeOnAir)
     {
@@ -75,8 +70,15 @@
         uint8_t type=extractBytesFromField(message,"type",common::fieldMap);
         if(type!=common::type[0]){
             //not a beacon, we don't care
+            //TODO: implement this type check in every Mode !!
             Log wrongTypeLog("Node "+std::to_string(nodeId)+" received Incorrecty packet type, dropping", true);
             logger.logMessage(wrongTypeLog);
+
+            //drop Message
+            dropAnimationPacket dropPacket(nodeId);
+            sf::Packet dropPacketReceiver;
+            dropPacketReceiver<<dropPacket;
+            logger.sendTcpPacket(dropPacketReceiver);
             // receiveBuffer.pop();
             return false;
         }
@@ -117,15 +119,15 @@
                 //we received a Beacon from the optimized path, but we need to check if the associated cost changed
                 if(pathCost<packetPathCost){
                     //the cost has changed
-                    pathCost=packetPathCost+5;
-                    hopCount=packetHopCount+1;//it can happen that the next Optimal Node in the path found a new optimal path itself, thus changing the hop count
+                    pathCost=packetPathCost+5;//TODO change this by a battery/congestion function
+                    hopCount=packetHopCount+1;//we add one to the hop count + it can happen that the next Optimal Node in the path found a new optimal path itself, thus changing the hop count
                 }
             }
             else{
             //check if the registerd path is still the least costly, otherwise update the path
                 if(pathCost>packetPathCost){
                      //the optimized path has changed - the path is independent from the fact we resend beacon
-                    pathCost=packetPathCost+5;
+                    pathCost=packetPathCost+5; //same as above TODO
                     hopCount=packetHopCount+1;
 
                     //we supress the old routing in the visualiser....
@@ -152,7 +154,7 @@
 
    
             //TODO: put the +4 in common
-            if (hopCount.value() +4>packetHopCount){
+            if (hopCount.value() +4>packetHopCount){//this +4 is my gut feeling, should be studied
                 // the timestamp received can be included in the synchronization clock mechanism as it has a similar relative accuracy
                 
                 lastTimeStampReceived=packetTimeStamp;//there should be a function to actualize the internal clock here
@@ -160,6 +162,11 @@
                 if(std::find(globalIDPacketList.begin(), globalIDPacketList.end(), packetGlobalIDPacket) != globalIDPacketList.end()){
                     Log alreadyBeacon("Node "+std::to_string(nodeId)+" already received this beacon, dropping", true);
                     logger.logMessage(alreadyBeacon);
+                    //drop Message
+                    dropAnimationPacket dropPacket(nodeId);
+                    sf::Packet dropPacketReceiver;
+                    dropPacketReceiver<<dropPacket;
+                    logger.sendTcpPacket(dropPacketReceiver);
                     
                 }else{
                     //it's a new beacon, we reenter boradcast mode regardless of the beacons left to send
@@ -362,6 +369,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
 
         std::lock_guard<std::mutex> lock(receiveMutex);
         if(globalIDPacketList.empty()){
+            //I was lazy so I copy past code from beacon mode, it's relatively the same, hence the disturbing name variables TODO change that 
             //this is the first beacon received
             shouldSendBeacon=true; //next tranmission slots, will create the new sending beacon scheduler
            globalIDPacketList.push_back(packetGlobalIDPacket);     
@@ -373,11 +381,19 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
                 if(std::find(globalIDPacketList.begin(), globalIDPacketList.end(), packetGlobalIDPacket) != globalIDPacketList.end()){
                     Log alreadyBeacon("Node "+std::to_string(nodeId)+" already received this beacon, dropping", true);
                     logger.logMessage(alreadyBeacon);
+                    //drop Message
+                    dropAnimationPacket dropPacket(nodeId);
+                    sf::Packet dropPacketReceiver;
+                    dropPacketReceiver<<dropPacket;
+                    logger.sendTcpPacket(dropPacketReceiver);
                     
                 }else{
-                    //This case should not happen too often, the C1 are supposed to wait 
+                    //this is another downlink message. The node stops sending former messages and restars with new
                     globalIDPacketList.push_back(packetGlobalIDPacket);
                     shouldSendBeacon=true;//at next transmission slots, will create the new sending beacon scheduler
+                    packetFinalReceiverId=packetReceiverId;   
+                    
+                    //maybe don't clear if you want to keep the former messages to be sent yet
                     beaconSlots.clear();
                 }
             }    
@@ -563,6 +579,12 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
         //not for us, we don't care
         Log wrongReceiverLog("Node "+std::to_string(nodeId)+" received a packet not for him, dropping", true);
         logger.logMessage(wrongReceiverLog);
+
+        //drop Message
+        dropAnimationPacket dropPacket(nodeId);
+        sf::Packet dropPacketReceiver;
+        dropPacketReceiver<<dropPacket;
+        logger.sendTcpPacket(dropPacketReceiver);
         return false;
     }
     //we received a packet for us, we should send an ack no matter what happened before (ack can be lost)
@@ -592,6 +614,12 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
             //we received the ACK for the last packet we sent
             nbPayloadLeft--;//in real life, we remove the payload from the buffer
             localIDPacketCounter++; //increasing the counter signify to nextNodeInPath that it's a new packet that we send
+       
+                    //drop Message to signigy it relinquish ownership
+            dropAnimationPacket dropPacket(nodeId);
+            sf::Packet dropPacketReceiver;
+            dropPacketReceiver<<dropPacket;
+            logger.sendTcpPacket(dropPacketReceiver);
         }
     
         sf::Packet receptionStatePacketReceiver;
@@ -685,7 +713,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
                         logger.logMessage(newMessage);
 
                         sf::Packet  transmitPacketReceiver;
-                        transmitMessagePacket transmitPacket(nodeId,nextNodeIdInPath);
+                        transmitMessagePacket transmitPacket(nodeId,nextNodeIdInPath,false);
                         transmitPacketReceiver<<transmitPacket;
                         logger.sendTcpPacket(transmitPacketReceiver);
                     }
@@ -737,7 +765,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
                     logger.logMessage(newMessage);
 
                     sf::Packet  transmitPacketReceiver;
-                    transmitMessagePacket transmitPacket(nodeId,nextNodeIdInPath);
+                    transmitMessagePacket transmitPacket(nodeId,nextNodeIdInPath,false);
                     transmitPacketReceiver<<transmitPacket;
                     logger.sendTcpPacket(transmitPacketReceiver);
                 }
@@ -785,7 +813,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
                 addMessageToTransmit(ackPacket,std::chrono::milliseconds(common::timeOnAirAckPacket));
 
                 sf::Packet  transmitPacketReceiver;
-                transmitMessagePacket transmitPacket(nodeId,lastSenderId);
+                transmitMessagePacket transmitPacket(nodeId,lastSenderId,true);
                 transmitPacketReceiver<<transmitPacket;
                 logger.sendTcpPacket(transmitPacketReceiver);
             }

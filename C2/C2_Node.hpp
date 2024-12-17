@@ -117,7 +117,6 @@ public :
         using PacketMap = std::unordered_map<SenderID, PacketList>; //we need the packet Map to not forward already forwarded data packet
         // Adds a Packet ID to the sender's list
         PacketMap packetsMap; // Data structure to store packets
-        void addPacket(SenderID sender, PacketID packet);
 
         //ACK strategy
         bool shouldReplyACK=false;

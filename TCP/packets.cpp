@@ -58,17 +58,17 @@ sf::Packet& operator>>(sf::Packet& packet, positionPacket& pp) {
 }
 
 // -------------------- transmitMessagePacket --------------------
-transmitMessagePacket::transmitMessagePacket(int senderId, int receiverId)
-    : senderId(senderId), receiverId(receiverId) {
+transmitMessagePacket::transmitMessagePacket(int senderId, int receiverId,bool isACK)
+    : senderId(senderId), receiverId(receiverId), isACK(isACK) {
     type = 4;
 }
 
 sf::Packet& operator<<(sf::Packet& packet, const transmitMessagePacket& tmp) {
-    return packet << tmp.type << tmp.senderId << tmp.receiverId;
+    return packet << tmp.type << tmp.senderId << tmp.receiverId<<tmp.isACK;
 }
 
 sf::Packet& operator>>(sf::Packet& packet, transmitMessagePacket& tmp) {
-    return packet >> tmp.type >> tmp.senderId >> tmp.receiverId;
+    return packet >> tmp.type >> tmp.senderId >> tmp.receiverId>>tmp.isACK;
 }
 
 // -------------------- receiveMessagePacket --------------------
@@ -110,4 +110,16 @@ sf::Packet& operator<<(sf::Packet& packet, const broadcastMessagePacket& bmp) {
 
 sf::Packet& operator>>(sf::Packet& packet, broadcastMessagePacket& bmp) {
     return packet >> bmp.type >> bmp.nodeId;
+}
+
+// -------------------- dropAnimationPacket --------------------
+dropAnimationPacket::dropAnimationPacket(int nodeId) : nodeId(nodeId) {
+    type = 8;
+}
+sf::Packet& operator<<(sf::Packet& packet, const dropAnimationPacket& dap) {
+    return packet << dap.type << dap.nodeId;
+}
+
+sf::Packet& operator>>(sf::Packet& packet, dropAnimationPacket& dap) {
+    return packet >> dap.type >> dap.nodeId;
 }

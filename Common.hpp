@@ -67,7 +67,7 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 
 //-----------------------------------------COMMUNICATION MODE-----------------------------------------
-#define COMMUNICATION_PERIOD 3
+#define COMMUNICATION_PERIOD 1
 
 #define RRC_BEACON 1  
 #define RRC_DOWNLINK 2

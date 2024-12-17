@@ -61,8 +61,9 @@ class transmitMessagePacket : public BasePacket {
 public:
     int senderId;
     int receiverId;
+    bool isACK;
 
-    transmitMessagePacket(int senderId = 0, int receiverId = 0);
+    transmitMessagePacket(int senderId = 0, int receiverId = 0,bool isACK=false);
     friend sf::Packet& operator<<(sf::Packet& packet, const transmitMessagePacket& tmp);
     friend sf::Packet& operator>>(sf::Packet& packet, transmitMessagePacket& tmp);
 };
@@ -96,6 +97,16 @@ public:
     broadcastMessagePacket(int nodeId = 0);
     friend sf::Packet& operator<<(sf::Packet& packet, const broadcastMessagePacket& bmp);
     friend sf::Packet& operator>>(sf::Packet& packet, broadcastMessagePacket& bmp);
+};
+
+
+class dropAnimationPacket : public BasePacket {
+public:
+    int nodeId;
+
+    dropAnimationPacket(int nodeId = 0);
+    friend sf::Packet& operator<<(sf::Packet& packet, const dropAnimationPacket& bmp);
+    friend sf::Packet& operator>>(sf::Packet& packet, dropAnimationPacket& bmp);
 };
 
 #endif // PACKETS_HPP
