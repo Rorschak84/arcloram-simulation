@@ -1,14 +1,17 @@
 #pragma once
 #include "../Node.hpp"
 
+//TODO:
+//instead of having multiple variables, prepare struct or objects that will contain the information needed to pass logic between receive() and transmit()
+
 
 class C2_Node : public Node {
 
 public :
 
 #if COMMUNICATION_PERIOD == RRC_DOWNLINK|| COMMUNICATION_PERIOD == RRC_BEACON
-    C2_Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex)
-    : Node(id, logger, coordinates, dispatchCv, dispatchCvMutex) {
+    C2_Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel=0)
+    : Node(id, logger, coordinates, dispatchCv, dispatchCvMutex,batteryLevel) {
 
             initializeTransitionMap();
             setInitialState(NodeState::Sleeping);

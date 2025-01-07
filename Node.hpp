@@ -40,7 +40,7 @@ enum class WindowNodeState{
 class Node {
 public:
 
-    Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex);
+    Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel=0);
     virtual ~Node() {
         stopReceiving = true; // Ensure any active threads are signaled to stop
     }
@@ -81,18 +81,19 @@ public:
 
 protected:
 
-    //variables
+
+    double batteryLevel=0.0;
+
     std::pair<int, int> coordinates ={0,0};//in meters (x,y)
     int nodeId;
     bool running;
     Logger& logger;
 
-    // Buffers for receiving and transmitting messages
-    // std::queue<std::vector<uint8_t>> receiveBuffer;
+    // Buffers transmitting messages
     std::queue<std::pair<std::vector<uint8_t>,std::chrono::milliseconds >> transmitBuffer;//MSG + Time On Air (TOA)
  
     //to simulate interferences:
-    //old
+    //old 
     std::atomic<std::chrono::steady_clock::time_point> timeOnAirEnd; // End of current Time On Air
     std::atomic<bool> stopReceiving{false};           // Signals the active thread to stop
     //new

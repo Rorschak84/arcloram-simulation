@@ -44,17 +44,17 @@ sf::Packet& operator>>(sf::Packet& packet, stateNodePacket& snp) {
 }
 
 // -------------------- positionPacket --------------------
-positionPacket::positionPacket( int id,int classNode,std::pair<int, int> coordinates)
-    :nodeId(id),classNode(classNode), coordinates(std::move(coordinates)) {
+positionPacket::positionPacket( int id,int classNode,std::pair<int, int> coordinates,double batteryLevel)
+    :nodeId(id),classNode(classNode), coordinates(std::move(coordinates)),batteryLevel(batteryLevel) {
     type = 3;
 }
 
 sf::Packet& operator<<(sf::Packet& packet, const positionPacket& pp) {
-    return packet << pp.type << pp.nodeId<< pp.classNode << pp.coordinates.first << pp.coordinates.second;
+    return packet << pp.type << pp.nodeId<< pp.classNode << pp.coordinates.first << pp.coordinates.second<<pp.batteryLevel;
 }
 
 sf::Packet& operator>>(sf::Packet& packet, positionPacket& pp) {
-    return packet >> pp.type >>pp.nodeId>>pp.classNode >> pp.coordinates.first >> pp.coordinates.second;
+    return packet >> pp.type >>pp.nodeId>>pp.classNode >> pp.coordinates.first >> pp.coordinates.second>>pp.batteryLevel;
 }
 
 // -------------------- transmitMessagePacket --------------------

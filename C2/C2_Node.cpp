@@ -9,7 +9,7 @@
     std::string finalMsg= msg+ "Class: "+std::to_string(getClassId())+ " started to run";
     
     sf::Packet positionPacketReceiver;
-    positionPacket positionPacket(nodeId,2,coordinates);
+    positionPacket positionPacket(nodeId,2,coordinates,batteryLevel);
     positionPacketReceiver<<positionPacket;
     logger.sendTcpPacket(positionPacketReceiver);
         return finalMsg;
@@ -101,7 +101,9 @@
             hopCount=packetHopCount+1;
             lastTimeStampReceived=packetTimeStamp;
             globalIDPacketList.push_back(packetGlobalIDPacket);
-            pathCost=packetPathCost+5; //should take into account the battery TODO
+            //The increment should increase as the battery level decreases. For now, simple linear  increment function.
+            uint8_t increment=packetPathCost+(10-1)/100*(100-batteryLevel);
+            pathCost=increment; //should take into account the battery TODO
             nextNodeIdInPath=packetNextNodeIdInPath;
 
             sf::Packet routingPacketReceiver;
@@ -119,7 +121,8 @@
                 //we received a Beacon from the optimized path, but we need to check if the associated cost changed
                 if(pathCost<packetPathCost){
                     //the cost has changed
-                    pathCost=packetPathCost+5;//TODO change this by a battery/congestion function
+                    uint8_t increment=packetPathCost+(10-1)/100*(100-batteryLevel);
+                    pathCost=increment;
                     hopCount=packetHopCount+1;//we add one to the hop count + it can happen that the next Optimal Node in the path found a new optimal path itself, thus changing the hop count
                 }
             }

@@ -86,7 +86,7 @@ void Seed::initialize_RRC_Beacon_Mesh(){
 
         for( int i = 1; i<nbC2Nodes+1; i++){
             
-            auto node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i-1],dispatchCv,dispatchCvMutex); // Create a smart pointer
+            auto node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i-1],dispatchCv,dispatchCvMutex,100.0); // Create a smart pointer
 
             for (size_t i = 0; i < common::nbComWindows; i++)
             {   

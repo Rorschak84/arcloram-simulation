@@ -3,8 +3,8 @@
 #include <future>
 
 // if this becomes too messy, think about creating an object to populate the node
-Node::Node(int id, Logger& logger, std::pair<int,int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex)
-    : nodeId(id), running(true),logger(logger), coordinates(coordinates), dispatchCv(dispatchCv), dispatchCvMutex(dispatchCvMutex) {
+Node::Node(int id, Logger& logger, std::pair<int,int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel)
+    : nodeId(id), running(true),logger(logger), coordinates(coordinates), dispatchCv(dispatchCv), dispatchCvMutex(dispatchCvMutex), batteryLevel(batteryLevel) {
     // Constructor implementation
     timeOnAirEnd={std::chrono::steady_clock::now()};//for interference, this is the new reference point
    
@@ -112,9 +112,8 @@ void Node::onTimeChange(WindowNodeState proposedState) {
                 //  Log transitionLog("Node "+std::to_string(nodeId)+" transitioned to "+stateToString(currentState), true);
                 //     logger.logMessage(transitionLog);   
              } else {
-
                 Log failedTransitionLog("Node "+std::to_string(nodeId)+" transition from "+stateToString(currentState)+" to "+stateToString(proposedState)+ " failed", true);
-               logger.logMessage(failedTransitionLog);
+                logger.logMessage(failedTransitionLog);
             }
         } else {
             Log noTransitionLog("Node "+std::to_string(nodeId)+" No valid state transition rule found for proposed state "+std::to_string(static_cast<int>(proposedState))+" and current state "+stateToString(currentState), true);
