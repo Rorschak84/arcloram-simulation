@@ -79,13 +79,13 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 //-----------------------------------------TOPOLOGY-----------------------------------------
 
-#define TOPOLOGY 3
+#define TOPOLOGY 4
 #define LINE 1
 #define STAR 2 //not implemented
 #define MESH 3
-#define MESH_SELF_HEALING// A topology that illustrates the self-healing capabilities of the protocol
+#define MESH_SELF_HEALING 4// A topology that illustrates the self-healing capabilities of the protocol
                          //It supposed to be the second round, so routing is already established
-                         //There is a dead node + a node with a low battery, the routing needs to adapt.
+                         //There is a dead node, the routing needs to adapt.
 
 
 
@@ -96,6 +96,8 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
     constexpr const char* topology = "Mesh";
 #elif TOPOLOGY == STAR
     constexpr const char* topology = "Star";
+#elif TOPOLOGY == MESH_SELF_HEALING
+    constexpr const char* topology = "Mesh_Self_Healing";
 #else
     #error "Unknown TOPOLOGY mode"
 #endif

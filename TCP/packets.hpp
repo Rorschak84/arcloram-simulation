@@ -110,4 +110,12 @@ public:
     friend sf::Packet& operator>>(sf::Packet& packet, dropAnimationPacket& bmp);
 };
 
+class retransmissionPacket : public BasePacket {
+    public:
+    int nodeId;
+    retransmissionPacket(int nodeId = 0);
+    friend sf::Packet& operator<<(sf::Packet& packet, const retransmissionPacket& rp);
+    friend sf::Packet& operator>>(sf::Packet& packet, retransmissionPacket& rp);
+};
+
 #endif // PACKETS_HPP

@@ -7,10 +7,7 @@ Node::Node(int id, Logger& logger, std::pair<int,int> coordinates, std::conditio
     : nodeId(id), running(true),logger(logger), coordinates(coordinates), dispatchCv(dispatchCv), dispatchCvMutex(dispatchCvMutex), batteryLevel(batteryLevel) {
     // Constructor implementation
     timeOnAirEnd={std::chrono::steady_clock::now()};//for interference, this is the new reference point
-   
-   
-   // endReceivingTimePoint={std::chrono::system_clock::now()};
-
+    
 }
 
 

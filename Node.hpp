@@ -40,7 +40,7 @@ enum class WindowNodeState{
 class Node {
 public:
 
-    Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel=0);
+    Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel=2.0);
     virtual ~Node() {
         stopReceiving = true; // Ensure any active threads are signaled to stop
     }
@@ -82,7 +82,7 @@ public:
 protected:
 
 
-    double batteryLevel=0.0;
+    double batteryLevel=3.0;
 
     std::pair<int, int> coordinates ={0,0};//in meters (x,y)
     int nodeId;

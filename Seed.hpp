@@ -44,12 +44,13 @@ private:
 
     void initializeNodes();
 
-
+        //TODO: there is bug: the first node must have an ID=0, (we should be able to attribute any ID to the nodes)
     #if COMMUNICATION_PERIOD == RRC_DOWNLINK || COMMUNICATION_PERIOD == RRC_BEACON
 
     void initialize_RRC_Downlink_Line();
     void initialize_RRC_Beacon_Line();
     void initialize_RRC_Beacon_Mesh();
+    void initialize_RRC_Beacon_Mesh_Self_Healing();
     #elif COMMUNICATION_PERIOD == RRC_UPLINK
 
     void initialize_RRC_Uplink_Mesh();

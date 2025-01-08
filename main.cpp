@@ -60,7 +60,7 @@ int main() {
     //TODO: have a getter for the nodes list, or create a function, you should not allot the nodes to be accessible in public
     //MAKE THIS FUNCTION in the manager class? maybe not
     for(auto ptrNode : manager.nodes){
-                // Schedule callbacks for the node's activations
+        // Schedule callbacks for the node's activations
         //we use the same callback that will call the correct calqlback Associated with the state transition
         for (const auto& [activationTime, windowNodeState] : ptrNode->getActivationSchedule()) {
             clock.scheduleCallback(activationTime, [ptrNode,windowNodeState]() {

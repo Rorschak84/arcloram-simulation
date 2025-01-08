@@ -123,3 +123,15 @@ sf::Packet& operator<<(sf::Packet& packet, const dropAnimationPacket& dap) {
 sf::Packet& operator>>(sf::Packet& packet, dropAnimationPacket& dap) {
     return packet >> dap.type >> dap.nodeId;
 }
+
+// -------------------- retransmissionPacket --------------------
+retransmissionPacket::retransmissionPacket(int nodeId) : nodeId(nodeId) {
+    type = 9;
+}
+
+sf::Packet& operator<<(sf::Packet& packet, const retransmissionPacket& rp) {
+    return packet << rp.type << rp.nodeId;
+}
+sf::Packet& operator>>(sf::Packet& packet, retransmissionPacket& rp) {
+    return packet >> rp.type >> rp.nodeId;
+}

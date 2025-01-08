@@ -80,6 +80,14 @@ std::vector<std::vector<std::shared_ptr<Node>>> SimulationManager::getReachableN
     for (const auto& node : nodes) {
         allReachableNodes.push_back(getReachableNodesForNode(node));
     }
+    logger.logMessage(Log("All reachable nodes calculated:", true));
+    for (size_t i = 0; i < allReachableNodes.size(); i++) {
+        std::string msg = "Node " + std::to_string(i) + " can reach: ";
+        for (const auto& reachableNode : allReachableNodes[i]) {
+            msg += std::to_string(reachableNode->getId()) + " ";
+        }
+        logger.logMessage(Log(msg, true));
+    }
     return allReachableNodes;
 }
 
