@@ -20,7 +20,7 @@ private:
     using CallbackType = std::function<void()>;
     std::multimap<int64_t, CallbackType> scheduledCallbacks; //stores the calls of onTimeChange() for each node at the activation times
                                                              //onTimeChange() will call the appropriate stateTransitionFunction
-                                                             //event-driven model
+                                                             
 
     // Current time in milliseconds
     int64_t currentTimeInMilliseconds() ;

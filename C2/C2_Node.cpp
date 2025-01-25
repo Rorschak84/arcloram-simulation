@@ -295,6 +295,7 @@ bool C2_Node::canCommunicateFromSleeping()
 
             addMessageToTransmit(beaconPacket, std::chrono::milliseconds(common::timeOnAirBeacon));
             beaconSlots.erase(beaconSlots.begin());
+            //TODO: we should simulate the node is transmitting here, right now it's instantaneous
         }
         if (!beaconSlots.empty())
         {
@@ -594,7 +595,7 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
     if (!canNodeReceiveMessage())
     {
         Log notlisteninglog("Node " + std::to_string(nodeId) + " not listening, dropped msg" /*+detailedBytesToString( message)*/, true);
-        logger.logMessage(notlisteninglog);
+        //logger.logMessage(notlisteninglog);
 
         sf::Packet receptionStatePacketReceiver;
         uint16_t senderId = extractBytesFromField(message, "senderGlobalId", common::dataFieldMap);
@@ -617,13 +618,13 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
     }
 
 
-
+        //The packet must be adressed to us to be processed
         uint16_t receiverId = extractBytesFromField(message, "receiverGlobalId", common::dataFieldMap);
         if (receiverId != nodeId)
         {
             // not for us, we don't care
             Log wrongReceiverLog("Node " + std::to_string(nodeId) + " received a packet not for him, dropping", true);
-            logger.logMessage(wrongReceiverLog);
+            //logger.logMessage(wrongReceiverLog);
 
             // drop Message
             dropAnimationPacket dropPacket(nodeId);
@@ -679,21 +680,14 @@ bool C2_Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::mi
         logger.sendTcpPacket(receptionStatePacketReceiver);
     }
 
-    if(isExpectingACK){
-        //TODO: doesn't work...
-        //we sent A Data packet and didn't receive an ACK in the next transmission window, so there will be retransmission-> we indicate this to the vizualiser
-        retransmissionPacket retransmissionPacket(nodeId);
-        sf::Packet retransmissionPacketReceiver;
-        retransmissionPacketReceiver << retransmissionPacket;
-        logger.sendTcpPacket(retransmissionPacketReceiver);
-    }
+
     return true;
 }
 
 bool C2_Node::canCommunicateFromSleeping()
 {
 
-    // the first state transition, we display root if applicable
+    // the first state transition, we display rooting in the visualiser if applicable
     if (common::visualiserConnected)
     {
         if (!routingDisplayed)
@@ -772,8 +766,10 @@ bool C2_Node::canCommunicateFromSleeping()
                     std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime));
 
                     addMessageToTransmit(dataPacket, std::chrono::milliseconds(common::timeOnAirAckPacket));
+                    //once we have transmitted our data packet, we expect an ACK in the next ACK transmission window.
+                    isExpectingACK=true;
                     Log newMessage("Node:" + std::to_string(nodeId) + "has a Msg for Node" + std::to_string(nextNodeIdInPath.value()), true);
-                    logger.logMessage(newMessage);
+                    //logger.logMessage(newMessage);
 
                     sf::Packet transmitPacketReceiver;
                     transmitMessagePacket transmitPacket(nodeId, nextNodeIdInPath.value(), false);
@@ -825,8 +821,10 @@ bool C2_Node::canCommunicateFromSleeping()
                 std::this_thread::sleep_for(std::chrono::milliseconds(common::guardTime));
 
                 addMessageToTransmit(dataPacket, std::chrono::milliseconds(common::timeOnAirAckPacket));
+                //once we have transmitted our data packet, we expect an ACK in the next ACK transmission window.
+                isExpectingACK=true;
                 Log newMessage("Node:" + std::to_string(nodeId) + "has a Msg for Node" + std::to_string(nextNodeIdInPath.value()), true);
-                logger.logMessage(newMessage);
+                //logger.logMessage(newMessage);
 
                 sf::Packet transmitPacketReceiver;
                 transmitMessagePacket transmitPacket(nodeId, nextNodeIdInPath.value(), false);
@@ -889,6 +887,22 @@ bool C2_Node::canCommunicateFromSleeping()
 }
 bool C2_Node::canSleepFromCommunicating()
 {
+    secondSleepWindow=!secondSleepWindow;
+    if(nodeId==2){
+    logger.logMessage(Log(secondSleepWindow?"Second":"First"+isExpectingACK?"-IsExpecting":"-Not Expecting", true));
+
+    }
+        if(isExpectingACK&&secondSleepWindow){
+        //we sent A Data packet and didn't receive an ACK in the next transmission window, so there will be retransmission-> we indicate this to the vizualiser
+        retransmissionPacket retransmissionPacket(nodeId);
+        sf::Packet retransmissionPacketReceiver;
+        retransmissionPacketReceiver << retransmissionPacket;
+        logger.sendTcpPacket(retransmissionPacketReceiver);
+        isExpectingACK=false;
+    }
+
+    
+
 
     currentState = NodeState::Sleeping;
     sf::Packet statePacketReceiver;

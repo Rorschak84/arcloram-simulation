@@ -200,46 +200,7 @@ bool Node::receiveMessage(const std::vector<uint8_t> message, std::chrono::milli
             });
             return resultFuture.get();
         }
-            // //launch a thread in detach mode that simulates the reception of the message. Any additional message received during a period of TimeOnAir ms will result in droping of the msg
-            // std::thread([this, message]() {
-            //     std::unique_lock<std::mutex> lock(interferenceMutex);
-            //     while( std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())< endReceivingTimePoint.load()){
-            //         interferenceCv.wait_until(lock, endReceivingTimePoint.load());
-            //     }
-            //     if(hadInterference){
-            //         Log abortLog("Node "+std::to_string(nodeId)+"aborts initial Msg reception: "/*+detailedBytesToString(message)*/+" due to interference", true);
-            //         logger.logMessage(abortLog);
-            //         hadInterference=false;//we drop the initial message
-            //         isReceiving=false;
-            //         return false;
-            //     }
-            //     else{
-            //     //THE BUFFER IS DEPRECATED, WE DON'T NEED IT ANYMORE TODO
-            //         std::lock_guard<std::mutex> lock(receiveMutex);
-            //         receiveBuffer.push(message); 
-            //         Log receivedLog("Node "+std::to_string(nodeId)+" received "+detailedBytesToString(message), true);
-            //         logger.logMessage(receivedLog); 
-            //         isReceiving=false;
-            //         return true;
-            //     }
-
-            // }).detach();
-       
-  
 }
-
-// std::optional<std::vector<uint8_t>> Node::getNextReceivedMessage() { //optionnal is a way to return a value or nothing
-    
-//     std::lock_guard<std::mutex> lock(receiveMutex);
-//     if (receiveBuffer.empty()) {
-//         return std::nullopt; //return nothing
-//     }
-//     std::vector<uint8_t> message = receiveBuffer.front();
-
-//     //change in order to implement node behavior
-//     receiveBuffer.pop();
-//     return message;
-// }
 
 void Node::addMessageToTransmit(const std::vector<uint8_t> message,std::chrono::milliseconds timeOnAir) {
     {       //we add the msg to the buffer, but we need to lock the buffer before

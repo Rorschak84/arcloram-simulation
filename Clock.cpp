@@ -105,8 +105,6 @@ void Clock::scheduleCallback(int64_t activationTime, CallbackType callback){
         //for one time stamp, there can multiple events (one for each node)
         //emplace and move are used to avoid copying the callback
         
-       //useless since we initialize and then read them , no race condiiton std::lock_guard<std::mutex> lock(callbackMutex);
-
         scheduledCallbacks.emplace(activationTime, std::move(callback));
     }
 

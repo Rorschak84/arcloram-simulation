@@ -29,6 +29,7 @@ enum class NodeState {
     Communicating
 };
 
+//Enum representing the scheduler proposed states for the nodes
 enum class WindowNodeState{
     
     CanTransmit,

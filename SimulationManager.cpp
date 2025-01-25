@@ -130,7 +130,7 @@ void SimulationManager::transmissionLoop() {
     }
 }
 
-bool SimulationManager::checkForMessages(){
+bool SimulationManager::    checkForMessages(){
 
 // Check if there is at least one node with a message to transmit
             for (const auto& node : nodes) {

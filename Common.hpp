@@ -53,7 +53,7 @@ If time allows, we will consider an hybrid use case that will combine the two pr
 
 
 //-----------------------------------------GENERAL PARAMETERS-----------------------------------------
-constexpr const int tickIntervalForClock_ms=150; // The tick interval should be at most equal to the minimum duration of all the windows, preferably greater otherwise unpredictable behavior may occur
+constexpr const int tickIntervalForClock_ms=150; // The tick interval should not be too low, as every states transitions 
 constexpr const int baseTimeOffset=1000; //the base time offset allows the system to initialize before the TDMA begins
 constexpr const double distanceThreshold=1000; //the distance threshold for the PHY layer
 constexpr const bool visualiserConnected=true;//set false if you don't want to display the protocol
@@ -67,7 +67,7 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 
 //-----------------------------------------COMMUNICATION MODE-----------------------------------------
-#define COMMUNICATION_PERIOD 1
+#define COMMUNICATION_PERIOD 3
 
 #define RRC_BEACON 1  
 #define RRC_DOWNLINK 2
@@ -79,13 +79,14 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 //-----------------------------------------TOPOLOGY-----------------------------------------
 
-#define TOPOLOGY 4
+#define TOPOLOGY 3
 #define LINE 1
 #define STAR 2 //not implemented
 #define MESH 3
 #define MESH_SELF_HEALING 4// A topology that illustrates the self-healing capabilities of the protocol
                          //It supposed to be the second round, so routing is already established
                          //There is a dead node, the routing needs to adapt.
+                         //only implemented for RRC_Beacon
 
 
 
@@ -111,9 +112,9 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
     constexpr const int minimumNbBeaconPackets=2;
     constexpr const int maximumNbBeaconPackets=4;
     constexpr const int nbSlotsPossibleForOneBeacon=10;
-    constexpr const int guardTime=50; //a sufficient guard time is needed to be sure every nodes that should are able to receive messages
+    constexpr const int guardTime=50; 
     constexpr const int typePacket=0x02;
-    constexpr const int timeOnAirFlood=70;//This should be quite high. Indeed, we don't have transmit from every nodes, and then receives for every paclets for every nodes, by having a great TOA we bypass this limitation TODO: change this to have a more resilient simulation 
+    constexpr const int timeOnAirFlood=70;
 
 
     //For the Time Division Multiple Access Scheme in Seed
@@ -152,9 +153,9 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
     constexpr const int minimumNbBeaconPackets=2;
     constexpr const int maximumNbBeaconPackets=4;
     constexpr const int nbSlotsPossibleForOneBeacon=10;
-    constexpr const int guardTime=50; //a sufficient guard time is needed to be sure every nodes that should are able to receive messages
+    constexpr const int guardTime=50; 
     constexpr const int typePacket=0x01;
-    constexpr const int timeOnAirBeacon=70;//This should be quite high. Indeed, we don't have transmit from every nodes, and then receives for every paclets for every nodes, by having a great TOA we bypass this limitation TODO: change this to have a more resilient simulation 
+    constexpr const int timeOnAirBeacon=70;
     
     //For the Time Division Multiple Access Scheme in Seed
     constexpr  const unsigned int lengthTransmissionWindow = 1000;

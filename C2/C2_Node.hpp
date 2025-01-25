@@ -149,7 +149,8 @@ public :
         uint16_t lastLocalIDPacket;
 
         //to display the number of retransmission in the visualiser
-        bool isExpectingACK=false;       
+        bool isExpectingACK=false;  
+        bool secondSleepWindow=true;     
 
     #else
         #error "Unknown COMMUNICATION_PERIOD mode"
