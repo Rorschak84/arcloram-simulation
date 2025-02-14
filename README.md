@@ -17,7 +17,7 @@ The engine is able to connect to the visualiser with local host using the port 5
 Consequently, SFML base and network module are required. If you wish to run the visualizer too, you will need the other  modules too. 
 A nice tutorial to link, and add to the compiler SFML:
 https://www.youtube.com/watch?v=rZE700aaT5I&t=429s
-
+Don't forget to change your binaries in the exec folder if necessary !
 
 ## Run the protocol
 Clone the repository, install SFML and you're ready to run the protocol.
