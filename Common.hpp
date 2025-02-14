@@ -53,7 +53,7 @@ If time allows, we will consider an hybrid use case that will combine the two pr
 
 
 //-----------------------------------------GENERAL PARAMETERS-----------------------------------------
-constexpr const int tickIntervalForClock_ms=150; // The tick interval should not be too low, as every states transitions 
+constexpr const int tickIntervalForClock_ms=150; // The tick interval should not be too low
 constexpr const int baseTimeOffset=1000; //the base time offset allows the system to initialize before the TDMA begins
 constexpr const double distanceThreshold=1000; //the distance threshold for the PHY layer
 constexpr const bool visualiserConnected=true;//set false if you don't want to display the protocol
@@ -79,14 +79,14 @@ constexpr const bool visualiserConnected=true;//set false if you don't want to d
 
 //-----------------------------------------TOPOLOGY-----------------------------------------
 
-#define TOPOLOGY 3
+#define TOPOLOGY 1
 #define LINE 1
 #define STAR 2 //not implemented
 #define MESH 3
 #define MESH_SELF_HEALING 4// A topology that illustrates the self-healing capabilities of the protocol
                          //It supposed to be the second round, so routing is already established
-                         //There is a dead node, the routing needs to adapt.
-                         //only implemented for RRC_Beacon
+                         //There is a dead node, that suddenly stopped working -> the networks needs to adapt.
+                         //only implemented for RRC_Beacon, do not try to run with RRC_UPLINK or Downlink
 
 
 

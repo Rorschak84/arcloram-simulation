@@ -34,6 +34,8 @@ void Seed::initializeNodes()
     }
     else if (use_case == "RRC_Downlink_Mesh")
     {
+        Log log("RRC_Downlink_Mesh runnning", true);
+        logger.logMessage(log);
         initialize_RRC_Beacon_Mesh(); // Provisionning is the same, TDMA may differ, if protocol is fully implemented
     }
     else if (use_case == "RRC_Beacon_Mesh_Self_Healing")
@@ -51,7 +53,7 @@ void Seed::initializeNodes()
     }
 #endif
 }
-
+//it's the same actually from a provisionning point of view
 #if COMMUNICATION_PERIOD == RRC_DOWNLINK || COMMUNICATION_PERIOD == RRC_BEACON
 
 void Seed::initialize_RRC_Beacon_Mesh()
@@ -89,12 +91,13 @@ void Seed::initialize_RRC_Beacon_Mesh()
     int nbC2Nodes = 6;
     std::vector<std::pair<int, int>> coordinatesC2 = {std::make_pair(600, 600), std::make_pair(600, -600), std::make_pair(1200, 0),
                                                       std::make_pair(1200, 1200), std::make_pair(1800, 600), std::make_pair(1800, -600)};
-
+        Log log1("Nodes will create", true);
+        logger.logMessage(log1);
     for (int i = 1; i < nbC2Nodes + 1; i++)
     {
         std::shared_ptr<C2_Node> node;
         if (i == 1) // to prove energy aware Routing works
-        {
+        {   
             node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 10.0); // Create a smart pointer
         }
         else
@@ -110,6 +113,8 @@ void Seed::initialize_RRC_Beacon_Mesh()
         }
         listNode.push_back(node);
     }
+    Log log2("Nodes are created", true);
+    logger.logMessage(log2);
 }
 
 void Seed::initialize_RRC_Beacon_Mesh_Self_Healing()
@@ -155,26 +160,26 @@ void Seed::initialize_RRC_Beacon_Mesh_Self_Healing()
         std::shared_ptr<C2_Node> node;
         if (i == 3) // this node will be dead
         {
-            node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 0.0, 1); // Create a smart pointer
+            node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 0.0, 1,2); // Create a smart pointer
         }
         else
         {
 
             if (i == 2)
             {
-                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 1); // Create a smart pointer
+                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 1,2); // Create a smart pointer
             }
             else if (i == 4)
             {
-                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 2); // Create a smart pointer
+                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 2,3); // Create a smart pointer
             }
             else if (i == 5)
             {
-                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 3); // Create a smart pointer
+                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 3,3); // Create a smart pointer
             }
             else if (i == 1)
             {
-                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 0); // Create a smart pointer
+                node = std::make_shared<C2_Node>(i, logger, coordinatesC2[i - 1], dispatchCv, dispatchCvMutex, 60.0, 0,1); // Create a smart pointer
             }
             for (size_t i = 0; i < common::nbComWindows; i++)
             {

@@ -19,13 +19,14 @@ std::string C2_Node::initMessage() const
     //     routingDecisionPacket routeDecisionPacket(nodeId, nextNodeIdInPath.value(), true);
     //     routePacket << routeDecisionPacket;
     // }
-
-
+        #if TOPOLOGY == MESH_SELF_HEALING
+        if(nextNodeIdInPath.has_value()){
             sf::Packet routePacket;
            routingDecisionPacket routeDecisionPacket(nodeId, nextNodeIdInPath.value(), true);
            routePacket << routeDecisionPacket;        
            logger.sendTcpPacket(routePacket);
-           
+        }
+        #endif
     return finalMsg;
 }
 

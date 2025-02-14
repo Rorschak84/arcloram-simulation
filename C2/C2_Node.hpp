@@ -11,10 +11,10 @@ class C2_Node : public Node {
 public :
 
 #if COMMUNICATION_PERIOD == RRC_DOWNLINK|| COMMUNICATION_PERIOD == RRC_BEACON
+
     C2_Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel=0)
     : Node(id, logger, coordinates, dispatchCv, dispatchCvMutex,batteryLevel) {
-            //Should be another constructor
-            //nextNodeIdInPath=nextNodeId;
+           
             initializeTransitionMap();
             setInitialState(NodeState::Sleeping);
 
@@ -23,17 +23,20 @@ public :
     };
 
     //constructor that simulates a beacon session already happened -> routes are established
-        C2_Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel,int nextNodeId)
+        C2_Node(int id, Logger& logger,std::pair<int, int> coordinates, std::condition_variable& dispatchCv, std::mutex& dispatchCvMutex,double batteryLevel,int nextNodeId,int hopCount)
     : Node(id, logger, coordinates, dispatchCv, dispatchCvMutex,batteryLevel) {
             
+        #if TOPOLOGY == MESH_SELF_HEALING
             //I lack of time, so I will not provision the full initial state that should result from a beacon mode,
             //I will simply display the route but internally, it's as "if" nothing happened. The topology using this constructor is built in a way that we don't see it.
             //TODO: Implement this initial state: nextNodeIdInPath, basePathCost, hopCount....
-            nextNodeIdInPath=nextNodeId;   
+            this->nextNodeIdInPath=nextNodeId;   
 
             initializeTransitionMap();
-            setInitialState(NodeState::Sleeping);
 
+        #endif
+
+        setInitialState(NodeState::Sleeping);
             
 
     };
